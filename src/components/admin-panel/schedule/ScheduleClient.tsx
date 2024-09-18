@@ -78,13 +78,9 @@ export default function ScheduleClient({
             <p>Loading...</p>
           ) : weekPlanned ? (
             <Scheduler weekStart={currentWeek.toISOString()} shifts={shifts}employees_list={employees} />
-          ) : availabilityCount === null ? (
-            <p>Loading availability...</p>
-          ) : availabilityCount > 0 ? (
-            <Scheduler weekStart={currentWeek.toISOString()} employees_list={employees}/>
           ) : (
-            <p>No availabilities inserted yet</p>
-          )}
+            <Scheduler weekStart={currentWeek.toISOString()} employees_list={employees}/>
+          ) }
         </CardContent>
       </Card>
     </div>
