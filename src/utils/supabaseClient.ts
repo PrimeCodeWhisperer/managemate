@@ -27,16 +27,8 @@ export async function updateSelectedShifts(updated_shifts:Shift[]){
   
 
 }
-export async function pubblishShifts(draft_shifts:Shift[]){
+export async function pubblishShifts(draft_shifts:Shift[],weekStart:Date){
   const supabase = createClient();
-
-  const data_for_db = draft_shifts.map((d) => ({
-    user_id: d.user_id,
-    date: format(d.date, 'yyyy-MM-dd'), // Convert Date to YYYY-MM-DD string
-    start_time: d.start_time,
-    end_time: d.end_time,
-    status: 'planned',
-  }))
 
   try {
     const data_for_db = draft_shifts.map((d) => ({
@@ -49,12 +41,15 @@ export async function pubblishShifts(draft_shifts:Shift[]){
 
     const { data, error } = await supabase.from('shifts').insert(data_for_db)
 
+    await supabase.from('week_shifts').insert({week_start:format(weekStart,'yyyy-MM-dd')})
+
     if (error) {
       console.error('Error while inserting shifts:', error)
       throw error
     }
 
     console.log('Shifts inserted successfully:', data)
+    
     return data
   } catch (error) {
     console.error('Unexpected error while inserting shifts:', error)

@@ -6,12 +6,11 @@ import { addDays, format, parseISO, isSameDay, isWithinInterval, differenceInHou
 import { Employee, Shift } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import ShiftPopover from './ShiftPopover';
 import { fetchEmployees, pubblishShifts } from '@/utils/supabaseClient';
 import CustomShiftDialog from './CustomShiftDialog';
 import {DropdownMenu, DropdownMenuContent, DropdownMenuTrigger,DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { redirect, useRouter } from 'next/navigation';
 
 const timeSpans = {
   morning: { start: '06:00', end: '11:59' },
@@ -41,16 +40,19 @@ export default function Component(props: SchedulerProps) {
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const days_objs = days.map((day, index) => addDays(selectedWeek, index));
   console.log(days_objs)
-
+  const [shifts_published,setArePublished]=useState(false)
   const [isCustomShiftDialogOpen, setIsCustomShiftDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   console.log(props.shifts)
+
+  const router=useRouter()
   //function that handles when a change into an already published schedule is made
   //-take new shifts and edited shifts
   //-publish new shifts
   //-update edited shifts
-  const handleScheduleUpdate=()=>{
-
+  const handlePublishSchedule= async ()=>{
+    await pubblishShifts(draft_shifts,selectedWeek);
+    router.push('/publish-schedule-success');
   }
   //handles when a new shift is being added
   const handleAddCustomShift = (date: Date) => {
@@ -148,7 +150,6 @@ export default function Component(props: SchedulerProps) {
       const employees = await fetchEmployees();
       setEmployees(employees);
     }
-
     if (!employees) {
       fetchEmployeesfromdb();
     }
@@ -255,7 +256,7 @@ export default function Component(props: SchedulerProps) {
           {props.shifts ? (
             <></>
           ):(
-            <Button onClick={handleScheduleUpdate}>Publish Schedule</Button>
+            <Button onClick={handlePublishSchedule}>Publish Schedule</Button>
           )}
         </div>
     </div>
