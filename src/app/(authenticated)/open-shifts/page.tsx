@@ -10,11 +10,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
-import ProfilesPage from "@/components/admin-panel/employees/employeestable";
+import VacationRequestsPage from "@/components/admin-panel/vacations/vacations-request";
+import OpenShiftsPage from "@/components/admin-panel/open-shifts/openshiftsclient";
 
-export default function UsersPage() {
+export default function VacationsPage() {
   return (
-    <ContentLayout title="Users">
+    <ContentLayout title="Account">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -30,11 +31,11 @@ export default function UsersPage() {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>Employees</BreadcrumbPage>
+            <BreadcrumbPage>Vacations</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <ProfilesPage />
+      <OpenShiftsPage />
     </ContentLayout>
   );
 }

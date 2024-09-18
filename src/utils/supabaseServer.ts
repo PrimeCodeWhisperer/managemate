@@ -1,5 +1,6 @@
-import { Employee, User } from "@/lib/definitions";
+import { Employee, Shift, User } from "@/lib/definitions";
 import { createClient } from "./supabase/server";
+import { endOfDay, startOfDay } from "date-fns";
 
 
 export async function getUserName(user_id?:string):Promise<User|undefined>{
@@ -12,7 +13,8 @@ export async function getUserName(user_id?:string):Promise<User|undefined>{
         return {
           id:data[0].id,
           username:data[0].username,
-          full_name:data[0].full_name,
+          first_name:data[0].first_name,
+          last_name:data[0].last_name,
           avatar_url:data[0].avatar_url,
           password:data[0].password,
           email:data[0].email,
@@ -37,4 +39,22 @@ export async function getUserName(user_id?:string):Promise<User|undefined>{
             }
           });
         }
-    }
+}
+export async function fetchShiftsForToday(currentDate: Date): Promise<Shift[] | undefined> {
+  const supabase = createClient();
+
+  const startOfToday = startOfDay(currentDate);
+  const endOfToday = endOfDay(currentDate);
+  const { data, error } = await supabase
+    .from('shifts')
+    .select('*')
+    .gte('date', startOfToday.toISOString())
+    .lte('date', endOfToday.toISOString());
+
+  if (error) {
+    console.error('Error fetching shifts for today:', error);
+    return undefined;
+  } else {
+    return data;
+  }
+}

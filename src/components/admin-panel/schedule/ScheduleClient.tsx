@@ -1,16 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { addWeeks, format, startOfWeek } from 'date-fns'
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { fetchEmployeeAvailabilityByWeek, fetchShiftInsertion, fetchShifts } from '@/utils/supabaseClient'
 import WeekNavigator from './WeekNavigator'
 import Scheduler from './Scheduler'
 import { Employee, Shift } from '@/lib/definitions'
-import { useAvailabilities } from '@/hooks/use-availabilities'
-
 export default function ScheduleClient({
   employees,
 }:{
@@ -52,9 +48,29 @@ export default function ScheduleClient({
 
   return (
     <div className='py-6'>
+      {/* month picker hided in order to finish MVP ASAP */}
+      {/* <Card>
+        <CardHeader>
+          <CardTitle>Month selection</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Popover>
+            <PopoverTrigger>
+              <Button variant={"outline"} className={cn("w-[280px] justify-start text-left font-normal", !currentWeek && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {currentWeek ? format(currentWeek, "MMM yyyy") : <span>Pick a month</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" >
+              <MonthPicker/>
+            </PopoverContent>
+          </Popover>
+        </CardContent>
+      </Card> */}
       <Card>
         <CardHeader>
           <CardTitle>Schedule for Week of {format(currentWeek, 'MMMM d, yyyy')}</CardTitle>
+          <CardDescription>{weekPlanned?`Week currently planned`:`Week currently unplanned`}</CardDescription>
         </CardHeader>
         <CardContent>
           <WeekNavigator currentWeek={currentWeek} setCurrentWeek={setCurrentWeek} />

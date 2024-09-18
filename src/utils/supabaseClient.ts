@@ -1,9 +1,9 @@
 import { createClient } from './supabase/client';
-import { endOfWeek, startOfWeek, format } from 'date-fns';
+import { endOfWeek, startOfWeek, format, startOfDay, endOfDay } from 'date-fns';
 import { Employee,Shift,User } from '@/lib/definitions';
 
 
-export async function getUserName(user_id?:string):Promise<User|undefined>{
+export async function getUser(user_id?:string):Promise<User|undefined>{
   const supabase = createClient();
 
   const { data, error } = await supabase
@@ -14,7 +14,8 @@ export async function getUserName(user_id?:string):Promise<User|undefined>{
       return {
         id:data[0].id,
         username:data[0].username,
-        full_name:data[0].full_name,
+        first_name:data[0].first_name,
+        last_name:data[0].last_name,
         avatar_url:data[0].avatar_url,
         password:data[0].password,
         email:data[0].email,
@@ -31,7 +32,7 @@ export async function pubblishShifts(draft_shifts:Shift[]){
 
   const data_for_db = draft_shifts.map((d) => ({
     user_id: d.user_id,
-    date: d.date.toISOString().split('T')[0], // Convert Date to YYYY-MM-DD string
+    date: format(d.date, 'yyyy-MM-dd'), // Convert Date to YYYY-MM-DD string
     start_time: d.start_time,
     end_time: d.end_time,
     status: 'planned',
@@ -40,7 +41,7 @@ export async function pubblishShifts(draft_shifts:Shift[]){
   try {
     const data_for_db = draft_shifts.map((d) => ({
       user_id: d.user_id,
-      date: d.date.toISOString().split('T')[0], // Convert Date to YYYY-MM-DD string
+      date: format(d.date, 'yyyy-MM-dd'), // Convert Date to YYYY-MM-DD string
       start_time: d.start_time,
       end_time: d.end_time,
       status: 'planned',
@@ -85,16 +86,43 @@ export async function fetchShifts(currentWeek:Date):Promise<Shift[]|undefined>{
 
   const startOfThisWeek = startOfWeek(currentWeek, { weekStartsOn: 1 });
   const endOfThisWeek = endOfWeek(currentWeek, { weekStartsOn: 1 });
+  
+  const startWeekString = format(startOfThisWeek, 'yyyy-MM-dd');
+  const endWeekString = format(endOfThisWeek, 'yyyy-MM-dd');
+
   const {data, error}= await supabase
     .from('shifts')
     .select('*')
-    .gte('date', startOfThisWeek.toISOString())
-    .lte('date', endOfThisWeek.toISOString());
-
+    .gte('date', startWeekString)
+    .lte('date',endWeekString );
+  console.log(startWeekString,endWeekString)
+console.log(data)
   if(error){
     console.error('Error fetching shifts:', error);
     return undefined;
   }else{
+    return data;
+  }
+}
+export async function fetchShiftsForToday(currentDate: Date): Promise<Shift[] | undefined> {
+  const supabase = createClient();
+  const startOfToday = startOfDay(currentDate);
+  const endOfToday = endOfDay(currentDate);
+
+  // Convert dates to dd-mm-yyyy format
+  const startDateString = format(startOfToday, 'yyyy-MM-dd');
+  const endDateString = format(endOfToday, 'yyyy-MM-dd');
+
+  const { data, error } = await supabase
+    .from('shifts')
+    .select('*')
+    .gte('date', startDateString) // Use formatted date string
+    .lte('date', endDateString);   // Use formatted date string
+
+  if (error) {
+    console.error('Error fetching shifts for today:', error);
+    return undefined;
+  } else {
     return data;
   }
 }

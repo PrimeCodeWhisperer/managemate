@@ -1,4 +1,5 @@
 import AdminPanelLayout from "@/components/admin-panel/admin-panel-layout";
+import { SupabaseDataProvider } from "@/contexts/SupabaseContext";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -12,5 +13,9 @@ export default async function DemoLayout({
     if(!session){
         redirect('login')
     }
-  return <AdminPanelLayout>{children}</AdminPanelLayout>;
+  return(
+  <SupabaseDataProvider>
+      <AdminPanelLayout>{children}</AdminPanelLayout>
+  </SupabaseDataProvider>
+  );
 }

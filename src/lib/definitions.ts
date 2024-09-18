@@ -1,7 +1,8 @@
 export type User = {
     id: string;
     username: string;
-    full_name:string;
+    first_name:string;
+    last_name:string;
     avatar_url:string;
     email: string;
     password: string;
@@ -10,7 +11,7 @@ export type User = {
 export type Shift={
     id?:number;
     user_id?:string;
-    date:Date;
+    date:string;
     start_time:string;
     end_time:string;
     status:string;
