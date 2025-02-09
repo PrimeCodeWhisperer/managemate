@@ -27,18 +27,26 @@ export async function updateSelectedShifts(updated_shifts:Shift[]){
   
 
 }
-export async function pubblishShifts(draft_shifts:UpcomingShift[],weekStart:Date){
+export async function pubblishShifts(draft_shifts:Shift[],weekStart:Date){
   const supabase = createClient();
 
   try {
-    const data_for_db = draft_shifts.map((d) => ({
-      user_id: d.user_id,
+    const openShifts=draft_shifts.filter(shift=>shift.status==='open');
+    const assignedShifts=draft_shifts.filter(shift=>shift.status!=='open');
+
+    const open_db=openShifts.map((d) => ({
       date: format(d.date, 'yyyy-MM-dd'), // Convert Date to YYYY-MM-DD string
       start_time: d.start_time,
     }))
 
-    const { data, error } = await supabase.from('upcoming_shifts').insert(data_for_db)
-
+    const assigned_db=assignedShifts.map((d) => ({
+      user_id: d.user_id,
+      date: format(d.date, 'yyyy-MM-dd'), // Convert Date to YYYY-MM-DD string
+      start_time: d.start_time,
+    }))
+    await supabase.from('upcoming_shifts').insert(assigned_db)
+   
+    const { data, error } =await supabase.from('open_shifts').insert(open_db)
     await supabase.from('week_shifts').insert({week_start:format(weekStart,'yyyy-MM-dd')})
 
     if (error) {
@@ -85,6 +93,34 @@ export async function fetchShifts(currentWeek: Date): Promise<Shift[] | undefine
 
   const query = supabase
   .from('upcoming_shifts') // Query the upcoming_shifts table
+  .select('*')
+  .gte('date', startWeekString) // Get shifts starting from the beginning of the week
+  .lte('date', endWeekString);   // Up to the end of the week
+
+
+  const { data, error } = await query; // Execute the query
+
+  console.log(startWeekString, endWeekString);
+  console.log(data);
+
+  if (error) {
+    console.error('Error fetching shifts:', error);
+    return undefined;
+  } else {
+    return data;
+  }
+}
+export async function fetchOpenShifts(currentWeek: Date): Promise<Shift[] | undefined> {
+  const supabase = createClient();
+
+  const startOfThisWeek = startOfWeek(currentWeek, { weekStartsOn: 1 });
+  const endOfThisWeek = endOfWeek(currentWeek, { weekStartsOn: 1 });
+
+  const startWeekString = format(startOfThisWeek, 'yyyy-MM-dd');
+  const endWeekString = format(endOfThisWeek, 'yyyy-MM-dd');
+
+  const query = supabase
+  .from('open_shifts') // Query the upcoming_shifts table
   .select('*')
   .gte('date', startWeekString) // Get shifts starting from the beginning of the week
   .lte('date', endWeekString);   // Up to the end of the week

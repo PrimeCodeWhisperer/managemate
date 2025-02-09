@@ -44,6 +44,7 @@ export default function Component(props: SchedulerProps) {
   const [isEditShiftDialogOpen, setIsEditShiftDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedShift, setSelectedShift] = useState<Shift | undefined>();
+  const [isDropDownOpen,setIsDropDownOpen]= useState<boolean>(false);
 
   const router=useRouter()
   //function that handles when a change into an already published schedule is made
@@ -55,16 +56,24 @@ export default function Component(props: SchedulerProps) {
     router.push('/publish-schedule-success');
   }
 
-  const handleSaveCustomShift = (shift: { user_id: string; start_time: string }) => {
+  const handleSaveCustomShift = (shift: { user_id: string; start_time: string ;open_shift:boolean}) => {
     if (selectedDate) {
-      const newShift: Shift = {
-        user_id: shift.user_id,
-        date: format(selectedDate, 'yyyy-MM-dd'),
-        start_time: shift.start_time,
-        status:'unplanned'
-      };
+      let newShift: Shift;
+      if(shift.open_shift==true){
+        newShift={
+          date: format(selectedDate, 'yyyy-MM-dd'),
+          start_time: shift.start_time,
+          status:'open'
+        }
+      }else{
+        newShift={
+          user_id: shift.user_id,
+          date: format(selectedDate, 'yyyy-MM-dd'),
+          start_time: shift.start_time,
+          status:'unplanned'
+          }
+      }
       setDraftShifts(prevShifts => [...prevShifts, newShift]);
-      console.log(draft_shifts)
     }
   };
   const handleShiftDelete = (shiftToDelete: Shift) => {
@@ -73,6 +82,13 @@ export default function Component(props: SchedulerProps) {
         !(shift.user_id === shiftToDelete.user_id && isSameDay(shift.date, shiftToDelete.date))
       )
     );
+  };
+  // When this item is clicked, close the dropdown and then open the dialog.
+  const handleOpenInfoDialog = () => {
+    // First close the dropdown.
+    setIsDropDownOpen(false);
+    // Then open the dialog.
+    setIsInfoShiftDialogOpen(true);
   };
 
   useEffect(() => {
@@ -138,9 +154,9 @@ export default function Component(props: SchedulerProps) {
     }else if(draft_shifts.length==0){
       setDraftShifts(props.shifts)
     }
-  },[props.shifts,selectedDate]);
+  },[props.shifts]);
   const renderWeekSchedule = () => {
-
+    console.log(draft_shifts)
     return (
       <Card >
         <CardContent className="p-0">
@@ -178,11 +194,11 @@ export default function Component(props: SchedulerProps) {
                         const startTime = parseISO(`2000-01-01T${shift.start_time}`);
                         
                         return (
-                          <DropdownMenu key={index}>
-                            <DropdownMenuTrigger className='w-full'>
+                          <DropdownMenu key={`${shift.user_id}-${dayIndex}-${span}-${index}`} >
+                            <DropdownMenuTrigger asChild className='w-full'>
                               <div 
                                 key={`${shift.user_id}-${dayIndex}-${span}-${index}`} 
-                                className={clsx("text-sm bg-background/10 border rounded p-2 mb-1 flex flex-col select-none cursor-pointer w-full",shift.status==='availability'&&'bg-green-300 border-green-500')}
+                                className={clsx("text-sm bg-background/10 border rounded p-2 mb-1 flex flex-col select-none cursor-pointer w-full",shift.status==='availability'&&'bg-green-300 border-green-500',shift.status==='open' && 'bg-blue-300 border-blue-500')}
                               >
                                 <div className="flex justify-between items-center font-semibold truncate">{employee?.name}</div>
                                 <div className="text-xs text-foreground/60  flex justify-between items-center">
@@ -193,12 +209,18 @@ export default function Component(props: SchedulerProps) {
                             <DropdownMenuContent>
                               {props.shifts?(
                                 <>
-                                  <DropdownMenuItem onClick={() => {setIsInfoShiftDialogOpen(true),setSelectedShift(shift)}}>Info</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => {
+                                    setSelectedShift(shift);
+                                    // Delay to ensure dropdown closes and cleans up before dialog opens
+                                    setTimeout(() => {
+                                      setIsInfoShiftDialogOpen(true);
+                                    }, 100);
+                                  }}>Info</DropdownMenuItem>
                                   <DropdownMenuItem>Change time</DropdownMenuItem>
                                 </>
                               ):(
                                 <>
-                                  <DropdownMenuItem onClick={()=>{setIsEditShiftDialogOpen(true),setSelectedShift(shift),handleShiftDelete(shift)}}>Edit</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={()=>{setSelectedShift(shift),handleShiftDelete(shift)}}>Edit</DropdownMenuItem>
                                   <DropdownMenuItem onClick={()=>handleShiftDelete(shift)}>Delete</DropdownMenuItem>
                                 </>
                               )}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { addWeeks, format, startOfWeek } from 'date-fns'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { fetchEmployeeAvailabilityByWeek, fetchShiftInsertion, fetchShifts } from '@/utils/supabaseClient'
+import { fetchEmployeeAvailabilityByWeek, fetchOpenShifts, fetchShiftInsertion, fetchShifts } from '@/utils/supabaseClient'
 import WeekNavigator from './WeekNavigator'
 import Scheduler from './Scheduler'
 import { Employee, Shift } from '@/lib/definitions'
@@ -17,9 +17,8 @@ export default function ScheduleClient({
     const startOfThisWeek = startOfWeek(today, { weekStartsOn: 1 })
     return addWeeks(startOfThisWeek, 2) // Start 2 weeks ahead
   })
-  const [, setAvailabilityCount] = useState<number | null>(null)
   const [weekPlanned, setWeekPlanned] = useState(false)
-  const [shifts, setShifts] = useState<Shift[]>()
+  const [shifts, setShifts] = useState<Shift[]>([])
   const [isLoading, setIsLoading] = useState(false)
   useEffect(() => {
     const checkShiftInserted = async () => {
@@ -35,10 +34,13 @@ export default function ScheduleClient({
       setIsLoading(true)
       if (weekPlanned) {
         const fetchedShifts = await fetchShifts(currentWeek)
-        setShifts(fetchedShifts)
-      } else {
-        const availability = await fetchEmployeeAvailabilityByWeek(currentWeek)
-        setAvailabilityCount(availability)
+        const fetchedOpenShifts= await fetchOpenShifts(currentWeek)
+        const shifts= fetchedShifts?fetchedShifts:[]
+        const open=fetchedOpenShifts?fetchedOpenShifts:[]
+
+        open.forEach(shift=>shift.status='open')
+        const all=shifts.concat(open)
+        setShifts(all)
       }
       setIsLoading(false)
     }
