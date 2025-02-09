@@ -10,6 +10,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
+import AdminSettings from "@/components/admin-panel/settings/AdminSettings";
 
 export default function AccountPage() {
   return (
@@ -33,7 +34,7 @@ export default function AccountPage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <PlaceholderContent />
+      <AdminSettings />
     </ContentLayout>
   );
 }

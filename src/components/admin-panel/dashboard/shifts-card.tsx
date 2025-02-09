@@ -41,7 +41,7 @@ export default function ShiftsCard({ date }: ShiftScheduleCardProps) {
                   <p className="font-medium">{employee?.name}</p>
                   <p className="text-sm text-muted-foreground">{'Waiter'}</p>
                   <p className="text-sm text-muted-foreground">
-                    {shift.start_time} - {shift.end_time}
+                    {shift.start_time}
                   </p>
                 </div>
               </li>

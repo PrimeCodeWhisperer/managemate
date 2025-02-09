@@ -11,6 +11,7 @@ import { format } from 'date-fns'
 import { useSupabaseData } from '@/contexts/SupabaseContext'
 import { Employee } from '@/lib/definitions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { fetchEmployees } from '@/utils/supabaseClient'
 
 interface VacationRequest {
   id: string
@@ -26,7 +27,6 @@ export default function VacationRequestsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const supabase = createClient()
-  const { employees } = useSupabaseData()
 
   useEffect(() => {
     const fetchVacationRequests = async () => {
@@ -45,10 +45,13 @@ export default function VacationRequestsPage() {
         if (error) {
           throw error
         }
+        const employees  =await fetchEmployees()
+
+        console.log(employees)
 
         setRequests(data?.map(item => ({
           ...item,
-          employee: employees?.find((empl) => empl.user_id === item.employee_id)
+          employee: employees?.find(e=> e.user_id==item.employee_id)
         })) || [])
       } catch (error: any) {
         setError('Error fetching vacation requests: ' + error.message)
@@ -58,10 +61,11 @@ export default function VacationRequestsPage() {
     }
 
     fetchVacationRequests()
-  }, [supabase, employees])
+  }, [])
 
   const handleStatusUpdate = async (id: string, newStatus: 'approved' | 'rejected') => {
     try {
+      console.log(newStatus)
       const { error } = await supabase
         .from('vacation_requests')
         .update({ status: newStatus })

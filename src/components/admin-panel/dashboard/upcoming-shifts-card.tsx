@@ -43,7 +43,7 @@ export default function UpcomingShiftsCard() {
             {shiftsForSelectedDate?.map((shift) => (
                 <TableRow key={shift.id}>
                 <TableCell>{shift.date}</TableCell>
-                <TableCell>{`${shift.start_time}-${shift.end_time}`}</TableCell>
+                <TableCell>{`${shift.start_time}`}</TableCell>
                 <TableCell>
                     <Badge variant="outline">{'Waiter'}</Badge>
                 </TableCell>

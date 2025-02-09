@@ -16,7 +16,7 @@ export default function AdminPanelLayout({
   if (!sidebar) return null;
 
   return (
-    <>
+    <div>
       <Sidebar />
       <main
         className={cn(
@@ -33,6 +33,6 @@ export default function AdminPanelLayout({
         )}
       >
       </footer>
-    </>
+    </div>
   );
 }

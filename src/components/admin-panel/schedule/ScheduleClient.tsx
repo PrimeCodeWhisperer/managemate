@@ -17,7 +17,7 @@ export default function ScheduleClient({
     const startOfThisWeek = startOfWeek(today, { weekStartsOn: 1 })
     return addWeeks(startOfThisWeek, 2) // Start 2 weeks ahead
   })
-  const [availabilityCount, setAvailabilityCount] = useState<number | null>(null)
+  const [, setAvailabilityCount] = useState<number | null>(null)
   const [weekPlanned, setWeekPlanned] = useState(false)
   const [shifts, setShifts] = useState<Shift[]>()
   const [isLoading, setIsLoading] = useState(false)

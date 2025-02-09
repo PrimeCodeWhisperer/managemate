@@ -7,51 +7,57 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Employee, Shift } from '@/lib/definitions';
 import { Label } from '@/components/ui/label';
 
-interface CustomShiftDialogProps {
+interface ShiftDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (shift: { user_id: string; start_time: string }) => void;
-  shift?:Shift;
+  onSave: (shift: Shift | { user_id: string; start_time: string }) => void;
+  shift?: Shift; // Optional for editing
   employees?: Employee[];
+  mode: 'edit' | 'create'; // Determine the mode of the dialog
 }
 
-const EditShiftDialog: React.FC<CustomShiftDialogProps> = ({ isOpen, onClose, onSave, employees,shift }) => {
+const ShiftDialog: React.FC<ShiftDialogProps> = ({ isOpen, onClose, onSave, employees, shift, mode }) => {
   const [employee, setEmployee] = useState<string>('');
   const [startTime, setStartTime] = useState<string>('');
-  const [endTime, setEndTime] = useState<string>();
-  const ogEmployee=shift?.user_id?shift?.user_id:'';
-  const ogStartTime=shift?.start_time?shift?.start_time:'';
+  const [endTime, setEndTime] = useState<string>('');
 
   useEffect(() => {
-    if (shift) {
+    if (mode === 'edit' && shift) {
       if(shift.user_id){
         setEmployee(shift?.user_id);
       }
       if(shift.start_time){
         setStartTime(shift?.start_time);
       }
+    } else {
+      // Reset fields for create mode
+      setEmployee('');
+      setStartTime('');
+      setEndTime('');
     }
-  }, [shift]);
+  }, [shift, mode]);
 
   const handleSave = () => {
-    if (shift) {
+    if (mode === 'edit' && shift) {
       const updatedShift: Shift = {
         ...shift,
         user_id: employee,
         start_time: startTime,
       };
+      onSave(updatedShift);
+    } else {
       onSave({ user_id: employee, start_time: startTime });
     }
     onClose(); // Ensure the dialog closes after saving
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={()=>{onClose(),onSave({user_id: ogEmployee, start_time: ogStartTime})}}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Custom Shift</DialogTitle>
+          <DialogTitle>{mode === 'edit' ? 'Edit Shift' : 'Custom Shift'}</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-3 py-4">
+        <div className="grid gap-4 py-4">
           <Label>Select employee</Label>
           <Select onValueChange={setEmployee} value={employee}>
             <SelectTrigger>
@@ -72,14 +78,17 @@ const EditShiftDialog: React.FC<CustomShiftDialogProps> = ({ isOpen, onClose, on
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
           />
-          {/*//TODOIf end time is setted by settings, show also end time
-          <Input
-            type="time"
-            placeholder="End Time"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-          />
-          */}
+          {mode === 'edit' && (
+            <>
+              <Label>Select end time</Label>
+              <Input
+                type="time"
+                placeholder="End Time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+              />
+            </>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
@@ -90,4 +99,4 @@ const EditShiftDialog: React.FC<CustomShiftDialogProps> = ({ isOpen, onClose, on
   );
 }
 
-export default EditShiftDialog;
+export default ShiftDialog;

@@ -13,8 +13,20 @@ export type Shift={
     user_id?:string;
     date:string;
     start_time:string;
+    status?:string;
+}
+export type UpcomingShift={
+    id?:number;
+    user_id?:string;
+    date:string;
+    start_time:string;
+}
+export type PastShift={
+    id?:number;
+    user_id?:string;
+    date:string;
+    start_time:string;
     end_time:string;
-    status:string;
 }
 export type AdminShiftInfo={
     workers:User[];

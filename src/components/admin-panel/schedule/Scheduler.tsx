@@ -3,15 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { addDays, format, parseISO, isSameDay, isWithinInterval, differenceInHours, add } from 'date-fns';
-import { Employee, Shift } from '@/lib/definitions';
+import { Employee, Shift,UpcomingShift } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { fetchEmployees, pubblishShifts } from '@/utils/supabaseClient';
 import CustomShiftDialog from './CustomShiftDialog';
 import {DropdownMenu, DropdownMenuContent, DropdownMenuTrigger,DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { redirect, useRouter } from 'next/navigation';
-
+import clsx from 'clsx';
+import EditShiftDialog from './EditShiftDialog';
+import InfoShiftDialog from './InfoShiftDialog';
 const timeSpans = {
   morning: { start: '06:00', end: '11:59' },
   afternoon: { start: '12:00', end: '17:59' },
@@ -36,14 +37,13 @@ export default function Component(props: SchedulerProps) {
   const [draft_shifts, setDraftShifts] = useState<Shift[]>([]);
   const [employees, setEmployees] = useState<Employee[] | undefined>(props.employees_list);
   const selectedWeek = parseISO(props.weekStart);
-  console.log(selectedWeek)
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const days_objs = days.map((day, index) => addDays(selectedWeek, index));
-  console.log(days_objs)
-  const [shifts_published,setArePublished]=useState(false)
   const [isCustomShiftDialogOpen, setIsCustomShiftDialogOpen] = useState(false);
+  const [isInfoShiftDialogOpen, setIsInfoShiftDialogOpen] = useState(false);
+  const [isEditShiftDialogOpen, setIsEditShiftDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  console.log(props.shifts)
+  const [selectedShift, setSelectedShift] = useState<Shift | undefined>();
 
   const router=useRouter()
   //function that handles when a change into an already published schedule is made
@@ -54,35 +54,19 @@ export default function Component(props: SchedulerProps) {
     await pubblishShifts(draft_shifts,selectedWeek);
     router.push('/publish-schedule-success');
   }
-  //handles when a new shift is being added
-  const handleAddCustomShift = (date: Date) => {
-    setSelectedDate(date);
-    setIsCustomShiftDialogOpen(true);
-  };
 
-  const handleSaveCustomShift = (shift: { user_id: string; start_time: string; end_time: string }) => {
+  const handleSaveCustomShift = (shift: { user_id: string; start_time: string }) => {
     if (selectedDate) {
       const newShift: Shift = {
         user_id: shift.user_id,
         date: format(selectedDate, 'yyyy-MM-dd'),
         start_time: shift.start_time,
-        end_time: shift.end_time,
-        status: 'unplanned'
+        status:'unplanned'
       };
       setDraftShifts(prevShifts => [...prevShifts, newShift]);
+      console.log(draft_shifts)
     }
   };
-
-  const handleShiftUpdate = (updatedShift: Shift, field: keyof Shift, value: string) => {
-    setDraftShifts(prevShifts => 
-      prevShifts.map(shift => 
-        shift.user_id === updatedShift.user_id && isSameDay(shift.date, updatedShift.date)
-          ? { ...shift, [field]: value }
-          : shift
-      )
-    );
-  };
-  
   const handleShiftDelete = (shiftToDelete: Shift) => {
     setDraftShifts(prevShifts => 
       prevShifts.filter(shift => 
@@ -104,14 +88,12 @@ export default function Component(props: SchedulerProps) {
       } else {
         const availability_list = data.map((list_item:any) => {
           const employee = employees?.find(employee => employee.user_id === list_item.employee_id);
-          console.log(employees)
 
           return {
             ...list_item,
             employee: employee,
           }
         });
-        console.log(availability_list)
         createInitialDraftShifts(availability_list);
       }
     };
@@ -134,8 +116,7 @@ export default function Component(props: SchedulerProps) {
                 user_id: avail.employee?.user_id,
                 date: format(day, 'yyyy-MM-dd'),
                 start_time: employee_availability.start,
-                end_time: employee_availability.end,
-                status: 'unplanned'
+                status: 'availability'
               }
               shifts_drafts.push(shift);
             }
@@ -143,7 +124,6 @@ export default function Component(props: SchedulerProps) {
         }
       })
       setDraftShifts(shifts_drafts)
-      
     }
 
     const fetchEmployeesfromdb = async () => {
@@ -155,14 +135,14 @@ export default function Component(props: SchedulerProps) {
     }
     if(!props.shifts){
       fetchAvailabilities();
-    }else{
+    }else if(draft_shifts.length==0){
       setDraftShifts(props.shifts)
     }
-  },[]);
+  },[props.shifts,selectedDate]);
   const renderWeekSchedule = () => {
-    console.log(draft_shifts)
+
     return (
-      <Card className="overflow-hidden">
+      <Card >
         <CardContent className="p-0">
           <div className="grid grid-cols-8 gap-px bg-foreground/15">
             <div className="bg-background/75 p-4"></div>
@@ -192,37 +172,33 @@ export default function Component(props: SchedulerProps) {
                   );
 
                   return (
-                    <div key={`${format(day, 'yyyy-MM-dd')}-${span}`} className="bg-background p-2 min-h-[120px]">
-                      {filteredShifts?.map((shift, index) => {
+                    <div key={`${format(day, 'yyyy-MM-dd')}-${span}`} className="bg-background p-2 min-h-[120px] w-full">
+                      {filteredShifts?.sort(function(a,b){return a.start_time.localeCompare(b.start_time)}).map((shift, index) => {
                         const employee = employees?.find(emp => emp.user_id === shift.user_id);
-                        console.log(shift)
                         const startTime = parseISO(`2000-01-01T${shift.start_time}`);
-                        const endTime = parseISO(`2000-01-01T${shift.end_time}`);
-                        const duration = differenceInHours(endTime, startTime);
                         
                         return (
                           <DropdownMenu key={index}>
-                            <DropdownMenuTrigger>
+                            <DropdownMenuTrigger className='w-full'>
                               <div 
                                 key={`${shift.user_id}-${dayIndex}-${span}-${index}`} 
-                                className="text-sm bg-background/10 border rounded p-2 mb-1  flex flex-col select-none cursor-pointer"
+                                className={clsx("text-sm bg-background/10 border rounded p-2 mb-1 flex flex-col select-none cursor-pointer w-full",shift.status==='availability'&&'bg-green-300 border-green-500')}
                               >
-                                <div className="font-semibold truncate">{employee?.name}</div>
+                                <div className="flex justify-between items-center font-semibold truncate">{employee?.name}</div>
                                 <div className="text-xs text-foreground/60  flex justify-between items-center">
-                                  <span >{format(startTime, 'h:mm a')} - {format(endTime, 'h:mm a')}</span>
-                                  <span className="bg-green-200 text-gray-800 px-1 rounded">{duration}h</span>
+                                  <span >{format(startTime, 'h:mm a')}</span>
                                 </div>
                               </div>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
                               {props.shifts?(
                                 <>
-                                  <DropdownMenuItem>Info</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => {setIsInfoShiftDialogOpen(true),setSelectedShift(shift)}}>Info</DropdownMenuItem>
                                   <DropdownMenuItem>Change time</DropdownMenuItem>
                                 </>
                               ):(
                                 <>
-                                  <DropdownMenuItem>Edit</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={()=>{setIsEditShiftDialogOpen(true),setSelectedShift(shift),handleShiftDelete(shift)}}>Edit</DropdownMenuItem>
                                   <DropdownMenuItem onClick={()=>handleShiftDelete(shift)}>Delete</DropdownMenuItem>
                                 </>
                               )}
@@ -245,6 +221,14 @@ export default function Component(props: SchedulerProps) {
   return (
     <div className="space-y-4">
       {renderWeekSchedule()}
+      
+      <EditShiftDialog
+        isOpen={isEditShiftDialogOpen}
+        onClose={()=>setIsEditShiftDialogOpen(false)}
+        onSave={handleSaveCustomShift}
+        shift={selectedShift}
+        employees={employees}
+      />
       <CustomShiftDialog
         isOpen={isCustomShiftDialogOpen}
         onClose={() => setIsCustomShiftDialogOpen(false)}
@@ -252,7 +236,13 @@ export default function Component(props: SchedulerProps) {
         date={selectedDate || new Date()}
         employees={employees}
       />
-        <div className='flex justify-end mt-4'>
+      <InfoShiftDialog
+        isOpen={isInfoShiftDialogOpen}
+        onClose={()=>setIsInfoShiftDialogOpen(false)}
+        shift={selectedShift}
+        employee={employees?.find(emp=>emp.user_id===selectedShift?.user_id)}
+      />
+      <div className='flex justify-end mt-4'>
           {props.shifts ? (
             <></>
           ):(

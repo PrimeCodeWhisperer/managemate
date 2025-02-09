@@ -1,6 +1,6 @@
 import { createClient } from './supabase/client';
 import { endOfWeek, startOfWeek, format, startOfDay, endOfDay } from 'date-fns';
-import { Employee,Shift,User } from '@/lib/definitions';
+import { Employee,Shift,User,UpcomingShift } from '@/lib/definitions';
 
 
 export async function getUser(user_id?:string):Promise<User|undefined>{
@@ -27,7 +27,7 @@ export async function updateSelectedShifts(updated_shifts:Shift[]){
   
 
 }
-export async function pubblishShifts(draft_shifts:Shift[],weekStart:Date){
+export async function pubblishShifts(draft_shifts:UpcomingShift[],weekStart:Date){
   const supabase = createClient();
 
   try {
@@ -35,11 +35,9 @@ export async function pubblishShifts(draft_shifts:Shift[],weekStart:Date){
       user_id: d.user_id,
       date: format(d.date, 'yyyy-MM-dd'), // Convert Date to YYYY-MM-DD string
       start_time: d.start_time,
-      end_time: d.end_time,
-      status: 'planned',
     }))
 
-    const { data, error } = await supabase.from('shifts').insert(data_for_db)
+    const { data, error } = await supabase.from('upcoming_shifts').insert(data_for_db)
 
     await supabase.from('week_shifts').insert({week_start:format(weekStart,'yyyy-MM-dd')})
 
@@ -76,26 +74,31 @@ export async function fetchShiftInsertion(currentWeek:Date){
     return ret_val;
   }
 }
-export async function fetchShifts(currentWeek:Date):Promise<Shift[]|undefined>{
+export async function fetchShifts(currentWeek: Date): Promise<Shift[] | undefined> {
   const supabase = createClient();
 
   const startOfThisWeek = startOfWeek(currentWeek, { weekStartsOn: 1 });
   const endOfThisWeek = endOfWeek(currentWeek, { weekStartsOn: 1 });
-  
+
   const startWeekString = format(startOfThisWeek, 'yyyy-MM-dd');
   const endWeekString = format(endOfThisWeek, 'yyyy-MM-dd');
 
-  const {data, error}= await supabase
-    .from('shifts')
-    .select('*')
-    .gte('date', startWeekString)
-    .lte('date',endWeekString );
-  console.log(startWeekString,endWeekString)
-console.log(data)
-  if(error){
+  const query = supabase
+  .from('upcoming_shifts') // Query the upcoming_shifts table
+  .select('*')
+  .gte('date', startWeekString) // Get shifts starting from the beginning of the week
+  .lte('date', endWeekString);   // Up to the end of the week
+
+
+  const { data, error } = await query; // Execute the query
+
+  console.log(startWeekString, endWeekString);
+  console.log(data);
+
+  if (error) {
     console.error('Error fetching shifts:', error);
     return undefined;
-  }else{
+  } else {
     return data;
   }
 }
@@ -144,7 +147,6 @@ export async function fetchEmployees():Promise<Employee[]|undefined>{
   
   const supabase = createClient()
   const { data, error } = await supabase.from('profiles').select('*',{count:'exact'}).eq('role','employee')
-  console.log(data)
   if(data){
     const emp:Employee[]=data.map((employee)=>{
       return{
