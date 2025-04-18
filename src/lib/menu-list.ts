@@ -55,13 +55,6 @@ export function getMenuList(pathname: string): Group[] {
           submenus: []
         },
         {
-          href: "/open-shifts",
-          label: "Open Shifts",
-          active: pathname.includes("/open-shifts"),
-          icon: Clock,
-          submenus: []
-        },
-        {
           href: "/vacations",
           label: "Vacations",
           active: pathname.includes("/vacations"),

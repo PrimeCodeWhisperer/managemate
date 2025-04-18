@@ -67,7 +67,7 @@ export default function VacationRequestsPage() {
     try {
       console.log(newStatus)
       const { error } = await supabase
-        .from('vacation_requests')
+        .from('vacations_requests')
         .update({ status: newStatus })
         .eq('id', id)
 

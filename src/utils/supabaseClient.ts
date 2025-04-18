@@ -148,7 +148,7 @@ export async function fetchShiftsForToday(currentDate: Date): Promise<Shift[] | 
   const endDateString = format(endOfToday, 'yyyy-MM-dd');
 
   const { data, error } = await supabase
-    .from('shifts')
+    .from('upcoming_shifts')
     .select('*')
     .gte('date', startDateString) // Use formatted date string
     .lte('date', endDateString);   // Use formatted date string

@@ -29,7 +29,7 @@ export default function DashboardContent(){
                 <CardDescription>View and manage your shifts</CardDescription>
               </CardHeader>
               <CardContent className='flex flex-row'>
-                <Calendar onSelectDate={handleSelectedDay} selectionMode="day"/>
+                <Calendar onSelectDate={handleSelectedDay} selectionMode="day" areShiftsPresent={true}/>
                 {(selectedDate&&(
                   <ShiftsCard date={selectedDate}/>
                 ))}

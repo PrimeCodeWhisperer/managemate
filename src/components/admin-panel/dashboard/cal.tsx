@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { fetchShiftsForToday } from '@/utils/supabaseClient';
 
 type CalendarProps = {
   onSelectDate: (date: Date | null) => void;
   initialSelectedDate?: Date | null;
   selectionMode: 'week' | 'day';
+  areShiftsPresent:boolean;
 };
 
-const Calendar: React.FC<CalendarProps> = ({ onSelectDate, initialSelectedDate, selectionMode }) => {
+const Calendar: React.FC<CalendarProps> = ({ onSelectDate, initialSelectedDate, selectionMode,areShiftsPresent }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(initialSelectedDate || new Date());
 
@@ -48,7 +50,6 @@ const Calendar: React.FC<CalendarProps> = ({ onSelectDate, initialSelectedDate, 
       }
     }
   };
-
   const isDateSelected = (day: number) => {
     if (!selectedDate) return false;
     
@@ -107,7 +108,9 @@ const Calendar: React.FC<CalendarProps> = ({ onSelectDate, initialSelectedDate, 
                   ? "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
                   : isToday(day)
                   ? "bg-secondary text-secondary-foreground hover:bg-secondary hover:text-secondary-foreground"
-                  : ""
+                  : areShiftsPresent
+                  ? " font-bold"
+                  :""
               )}
               onClick={() => handleSelectDate(day)}
             >
