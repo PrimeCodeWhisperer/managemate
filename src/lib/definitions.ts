@@ -5,7 +5,6 @@ export type User = {
     last_name:string;
     avatar_url:string;
     email: string;
-    password: string;
     role:string;
   };
 export type Shift={
