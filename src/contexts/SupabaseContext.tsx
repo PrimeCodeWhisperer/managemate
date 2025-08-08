@@ -28,13 +28,36 @@ export const SupabaseDataProvider = ({ children }: { children: ReactNode }) => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        const [userData, employeesData] = await Promise.all([
-          getUser(user?.id),
-          fetchEmployees(),
-        ]);
+        const cachedEmployees = localStorage.getItem('employees');
+        const cachedUser = localStorage.getItem('userData');
+
+        let employeesData: Employee[] | undefined = cachedEmployees
+          ? JSON.parse(cachedEmployees)
+          : undefined;
+        let userData: User | undefined = cachedUser
+          ? JSON.parse(cachedUser)
+          : undefined;
+
+        if (!employeesData || !userData) {
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+
+          if (!userData) {
+            userData = await getUser(user?.id);
+            if (userData) {
+              localStorage.setItem('userData', JSON.stringify(userData));
+            }
+          }
+
+          if (!employeesData) {
+            employeesData = await fetchEmployees();
+            if (employeesData) {
+              localStorage.setItem('employees', JSON.stringify(employeesData));
+            }
+          }
+        }
+
         setData(userData);
         setEmployees(employeesData);
       } catch (err: any) {
