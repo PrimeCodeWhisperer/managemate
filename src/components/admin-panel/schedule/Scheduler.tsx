@@ -14,11 +14,7 @@ import clsx from 'clsx';
 import EditShiftDialog from './EditShiftDialog';
 import InfoShiftDialog from './InfoShiftDialog';
 import { useSupabaseData } from '@/contexts/SupabaseContext';
-const timeSpans = {
-  morning: { start: '06:00', end: '11:59' },
-  afternoon: { start: '12:00', end: '17:59' },
-  evening: { start: '18:00', end: '23:59' },
-};
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface Availability {
   week_start: string;
@@ -36,6 +32,7 @@ interface SchedulerProps {
 export default function Component(props: SchedulerProps) {
   const [draft_shifts, setDraftShifts] = useState<Shift[]>([]);
   const { employees } = useSupabaseData();
+  const { timeSpans } = useSettings();
   const selectedWeek = parseISO(props.weekStart);
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const days_objs = days.map((day, index) => addDays(selectedWeek, index));
@@ -168,32 +165,32 @@ export default function Component(props: SchedulerProps) {
                 )}
               </div>
             ))}
-            {Object.entries(timeSpans).map(([span]) => (
-              <React.Fragment key={span}>
+            {timeSpans.map((span) => (
+              <React.Fragment key={span.id}>
                 <div className="bg-background/80 p-4 font-semibold capitalize">
-                  {span}
+                  {span.name}
                 </div>
-                
+
                 {days_objs.map((day, dayIndex) => {
-                  const filteredShifts = draft_shifts?.filter(shift => 
-                    isSameDay(shift.date, day) && 
-                    isWithinInterval(parseISO(`2000-01-01T${shift.start_time}`), { 
-                      start: parseISO(`2000-01-01T${timeSpans[span as keyof typeof timeSpans].start}`), 
-                      end: parseISO(`2000-01-01T${timeSpans[span as keyof typeof timeSpans].end}`) 
+                  const filteredShifts = draft_shifts?.filter(shift =>
+                    isSameDay(shift.date, day) &&
+                    isWithinInterval(parseISO(`2000-01-01T${shift.start_time}`), {
+                      start: parseISO(`2000-01-01T${span.start_time}`),
+                      end: parseISO(`2000-01-01T${span.end_time}`)
                     })
                   );
 
                   return (
-                    <div key={`${format(day, 'yyyy-MM-dd')}-${span}`} className="bg-background p-2 min-h-[120px] w-full">
+                    <div key={`${format(day, 'yyyy-MM-dd')}-${span.id}`} className="bg-background p-2 min-h-[120px] w-full">
                       {filteredShifts?.sort(function(a,b){return a.start_time.localeCompare(b.start_time)}).map((shift, index) => {
                         const employee = employees?.find(emp => emp.user_id === shift.user_id);
                         const startTime = parseISO(`2000-01-01T${shift.start_time}`);
-                        
+
                         return (
-                          <DropdownMenu key={`${shift.user_id}-${dayIndex}-${span}-${index}`} >
+                          <DropdownMenu key={`${shift.user_id}-${dayIndex}-${span.id}-${index}`} >
                             <DropdownMenuTrigger asChild className='w-full'>
-                              <div 
-                                key={`${shift.user_id}-${dayIndex}-${span}-${index}`} 
+                              <div
+                                key={`${shift.user_id}-${dayIndex}-${span.id}-${index}`}
                                 className={clsx("text-sm bg-background/10 border rounded p-2 mb-1 flex flex-col select-none cursor-pointer w-full",shift.status==='availability'&&'bg-green-300 border-green-500',shift.status==='open' && 'bg-blue-300 border-blue-500')}
                               >
                                 <div className="flex justify-between items-center font-semibold truncate">{employee?.name}</div>

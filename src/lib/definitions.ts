@@ -54,3 +54,10 @@ export type AvailabilityTable= {
       [key: string]: { start: string; end: string }[];
     };
 }
+
+export type TimeSpan = {
+    id: number;
+    name: string;
+    start_time: string;
+    end_time: string;
+};

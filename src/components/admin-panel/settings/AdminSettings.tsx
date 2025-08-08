@@ -5,15 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Clock, Building2, Users, Bell, Shield } from 'lucide-react';
+import { Clock, Building2, Bell } from 'lucide-react';
+import { useSettings } from '@/contexts/SettingsContext';
+import { TimeSpan } from '@/lib/definitions';
 
 const AdminSettings = () => {
-  // State for time spans
-  const [timeSpans, setTimeSpans] = useState([
-    { id: 1, name: 'Morning', startTime: '06:00', endTime: '14:00' },
-    { id: 2, name: 'Afternoon', startTime: '14:00', endTime: '22:00' },
-    { id: 3, name: 'Night', startTime: '22:00', endTime: '06:00' }
-  ]);
+  const { timeSpans, addTimeSpan, updateTimeSpan } = useSettings();
 
   // State for business settings
   const [businessSettings, setBusinessSettings] = useState({
@@ -24,12 +21,11 @@ const AdminSettings = () => {
     autoSchedule: false
   });
 
-  const handleTimeSpanChange = (id: number, field: string, value: string) => {
-    setTimeSpans(spans =>
-      spans.map(span =>
-        span.id === id ? { ...span, [field]: value } : span
-      )
-    );
+  const handleTimeSpanChange = (id: number, field: keyof Omit<TimeSpan,'id'>, value: string) => {
+    const span = timeSpans.find(s => s.id === id);
+    if (!span) return;
+    const updated = { ...span, [field]: value } as TimeSpan;
+    updateTimeSpan(updated);
   };
 
   return (
@@ -101,21 +97,21 @@ const AdminSettings = () => {
                   <label className="text-sm font-medium">Start Time</label>
                   <Input
                     type="time"
-                    value={span.startTime}
-                    onChange={(e) => handleTimeSpanChange(span.id, 'startTime', e.target.value)}
+                    value={span.start_time}
+                    onChange={(e) => handleTimeSpanChange(span.id, 'start_time', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">End Time</label>
                   <Input
                     type="time"
-                    value={span.endTime}
-                    onChange={(e) => handleTimeSpanChange(span.id, 'endTime', e.target.value)}
+                    value={span.end_time}
+                    onChange={(e) => handleTimeSpanChange(span.id, 'end_time', e.target.value)}
                   />
                 </div>
               </div>
             ))}
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full" onClick={() => addTimeSpan({ name: '', start_time: '', end_time: '' })}>
               Add Time Span
             </Button>
           </div>

@@ -1,5 +1,6 @@
 import AdminPanelLayout from "@/components/admin-panel/admin-panel-layout";
 import { SupabaseDataProvider } from "@/contexts/SupabaseContext";
+import { SettingsProvider } from "@/contexts/SettingsContext";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -15,7 +16,9 @@ export default async function DemoLayout({
     }
   return(
   <SupabaseDataProvider>
+    <SettingsProvider>
       <AdminPanelLayout>{children}</AdminPanelLayout>
+    </SettingsProvider>
   </SupabaseDataProvider>
   );
 }
