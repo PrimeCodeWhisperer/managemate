@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Loader2, Trash2,ViewIcon } from "lucide-react"
+import { Loader2, Trash2 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar,AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { EmployeeInfoDialog } from './employee-info-dialog'
+import { fetchEmployees } from '@/utils/api'
 
 interface Profile {
   id: string
@@ -57,7 +58,14 @@ export default function ProfilesPage() {
         throw error
       }
 
-      setProfiles(profiles.filter(profile => profile.id !== id))
+      const updatedProfiles = profiles.filter(profile => profile.id !== id)
+      setProfiles(updatedProfiles)
+
+      const cachedEmployees = localStorage.getItem('employees')
+      if (cachedEmployees) {
+        const updatedEmployees = await fetchEmployees();
+        localStorage.setItem('employees', JSON.stringify(updatedEmployees))
+      }
     } catch (error: any) {
       setError('Error deleting profile: ' + error.message)
     }
@@ -109,8 +117,11 @@ export default function ProfilesPage() {
                 <TableCell>{profile.username}</TableCell>
                 <TableCell>{`${profile.first_name} ${profile.last_name}`}</TableCell>
                 <TableCell>{profile.email}</TableCell>
-                <TableCell>
+                <TableCell className="flex gap-2">
                     <EmployeeInfoDialog employee={profile}/>
+                    <Button variant="destructive" size="sm" onClick={() => handleDelete(profile.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                 </TableCell>
                 </TableRow>
                 );

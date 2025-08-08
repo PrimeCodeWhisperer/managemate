@@ -80,6 +80,7 @@ export const SettingsProvider = ({
     <SettingsContext.Provider
       value={{ timeSpans, addTimeSpan, updateTimeSpan, saveChanges }}
     >
+
       {children}
     </SettingsContext.Provider>
   );

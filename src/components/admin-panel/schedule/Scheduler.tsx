@@ -73,6 +73,15 @@ export default function Component(props: SchedulerProps) {
       setDraftShifts(prevShifts => [...prevShifts, newShift]);
     }
   };
+  const isTimeWithinSpan = (time: string, span: TimeSpan) => {
+    const start = parseISO(`2000-01-01T${span.startTime}`);
+    const end = parseISO(`2000-01-01T${span.endTime}`);
+    const target = parseISO(`2000-01-01T${time}`);
+    if (span.startTime <= span.endTime) {
+      return isWithinInterval(target, { start, end });
+    }
+    return target >= start || target <= end;
+  };
   const handleShiftDelete = (shiftToDelete: Shift) => {
     setDraftShifts(prevShifts => 
       prevShifts.filter(shift => 

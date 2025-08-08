@@ -38,6 +38,13 @@ const AdminSettings = () => {
     updateTimeSpan(updated);
   };
 
+  const handleAddTimeSpan = () => {
+    setTimeSpans(spans => [
+      ...spans,
+      { id: spans.length + 1, name: 'New Span', startTime: '00:00', endTime: '00:00' }
+    ]);
+  };
+
   return (
     <div className="py-6 space-y-6  mx-auto">
       {/* Business Settings */}
