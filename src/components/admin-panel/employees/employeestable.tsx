@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar,AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { EmployeeInfoDialog } from './employee-info-dialog'
+import { fetchEmployees } from '@/utils/api'
 
 interface Profile {
   id: string
@@ -62,8 +63,7 @@ export default function ProfilesPage() {
 
       const cachedEmployees = localStorage.getItem('employees')
       if (cachedEmployees) {
-        const employees = JSON.parse(cachedEmployees) as Profile[]
-        const updatedEmployees = employees.filter(employee => employee.id !== id)
+        const updatedEmployees = await fetchEmployees();
         localStorage.setItem('employees', JSON.stringify(updatedEmployees))
       }
     } catch (error: any) {
