@@ -6,12 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { fetchEmployeeAvailabilityByWeek, fetchOpenShifts, fetchShiftInsertion, fetchShifts } from '@/utils/supabaseClient'
 import WeekNavigator from './WeekNavigator'
 import Scheduler from './Scheduler'
-import { Employee, Shift } from '@/lib/definitions'
-export default function ScheduleClient({
-  employees,
-}:{
-  employees?:Employee[],
-}) {
+import { Shift } from '@/lib/definitions'
+export default function ScheduleClient() {
   const [currentWeek, setCurrentWeek] = useState(() => {
     const today = new Date()
     const startOfThisWeek = startOfWeek(today, { weekStartsOn: 1 })
@@ -78,9 +74,9 @@ export default function ScheduleClient({
           {isLoading ? (
             <p>Loading...</p>
           ) : weekPlanned ? (
-            <Scheduler weekStart={currentWeek.toISOString()} shifts={shifts}employees_list={employees} />
+            <Scheduler weekStart={currentWeek.toISOString()} shifts={shifts} />
           ) : (
-            <Scheduler weekStart={currentWeek.toISOString()} employees_list={employees}/>
+            <Scheduler weekStart={currentWeek.toISOString()} />
           ) }
         </CardContent>
       </Card>

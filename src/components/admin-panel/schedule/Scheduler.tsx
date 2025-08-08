@@ -7,13 +7,13 @@ import { Employee, Shift,UpcomingShift } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { pubblishShifts } from '@/utils/supabaseClient';
-import { fetchEmployees } from '@/utils/api';
 import CustomShiftDialog from './CustomShiftDialog';
 import {DropdownMenu, DropdownMenuContent, DropdownMenuTrigger,DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { redirect, useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import EditShiftDialog from './EditShiftDialog';
 import InfoShiftDialog from './InfoShiftDialog';
+import { useSupabaseData } from '@/contexts/SupabaseContext';
 const timeSpans = {
   morning: { start: '06:00', end: '11:59' },
   afternoon: { start: '12:00', end: '17:59' },
@@ -30,13 +30,12 @@ interface Availability {
 
 interface SchedulerProps {
   shifts?: Shift[];
-  employees_list?: Employee[];
   weekStart:string;
 }
 
 export default function Component(props: SchedulerProps) {
   const [draft_shifts, setDraftShifts] = useState<Shift[]>([]);
-  const [employees, setEmployees] = useState<Employee[] | undefined>(props.employees_list);
+  const { employees } = useSupabaseData();
   const selectedWeek = parseISO(props.weekStart);
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const days_objs = days.map((day, index) => addDays(selectedWeek, index));
@@ -143,19 +142,16 @@ export default function Component(props: SchedulerProps) {
       setDraftShifts(shifts_drafts)
     }
 
-    const fetchEmployeesfromdb = async () => {
-      const employees = await fetchEmployees();
-      setEmployees(employees);
-    }
     if (!employees) {
-      fetchEmployeesfromdb();
+      return;
     }
     if(!props.shifts){
       fetchAvailabilities();
     }else if(draft_shifts.length==0){
       setDraftShifts(props.shifts)
     }
-  },[props.shifts]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[employees, props.shifts]);
   const renderWeekSchedule = () => {
     return (
       <Card >
