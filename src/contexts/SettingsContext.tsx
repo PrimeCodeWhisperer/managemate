@@ -5,12 +5,13 @@ import { TimeSpan } from "@/lib/definitions";
 
 interface SettingsContextType {
   timeSpans: TimeSpan[];
-  addTimeSpan: (span: Omit<TimeSpan, "id">) => Promise<void>;
-  updateTimeSpan: (span: TimeSpan) => Promise<void>;
+  addTimeSpan: (span: Omit<TimeSpan, "id">) => void;
+  updateTimeSpan: (span: TimeSpan) => void;
+  saveChanges: () => Promise<void>;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export const SettingsProvider = ({
@@ -31,33 +32,54 @@ export const SettingsProvider = ({
     fetchSpans();
   }, []);
 
-  const addTimeSpan = async (span: Omit<TimeSpan, "id">) => {
-    const res = await fetch("/api/time-spans", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(span),
-    });
-    if (res.ok) {
-      const data: TimeSpan = await res.json();
-      setTimeSpans((prev) => [...prev, data]);
-    }
+  const addTimeSpan = (span: Omit<TimeSpan, "id">) => {
+    setTimeSpans((prev) => [...prev, { id: Date.now() * -1, ...span }]);
   };
 
-  const updateTimeSpan = async (span: TimeSpan) => {
-    const res = await fetch("/api/time-spans", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(span),
-    });
+  const updateTimeSpan = (span: TimeSpan) => {
+    setTimeSpans((prev) =>
+      prev.map((s) => (s.id === span.id ? { ...span } : s)),
+    );
+  };
+
+  const saveChanges = async () => {
+    for (const span of timeSpans) {
+      if (span.id < 0) {
+        const res = await fetch("/api/time-spans", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: span.name,
+            start_time: span.start_time,
+            end_time: span.end_time,
+          }),
+        });
+        if (res.ok) {
+          const saved: TimeSpan = await res.json();
+          setTimeSpans((prev) =>
+            prev.map((s) => (s.id === span.id ? saved : s)),
+          );
+        }
+      } else {
+        await fetch("/api/time-spans", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(span),
+        });
+      }
+    }
+
+    const res = await fetch("/api/time-spans", { cache: "no-store" });
     if (res.ok) {
-      setTimeSpans((prev) =>
-        prev.map((s) => (s.id === span.id ? { ...span } : s))
-      );
+      const data: TimeSpan[] = await res.json();
+      setTimeSpans(data);
     }
   };
 
   return (
-    <SettingsContext.Provider value={{ timeSpans, addTimeSpan, updateTimeSpan }}>
+    <SettingsContext.Provider
+      value={{ timeSpans, addTimeSpan, updateTimeSpan, saveChanges }}
+    >
       {children}
     </SettingsContext.Provider>
   );

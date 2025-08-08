@@ -1,28 +1,38 @@
-'use client'
-import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Clock, Building2, Bell } from 'lucide-react';
-import { useSettings } from '@/contexts/SettingsContext';
-import { TimeSpan } from '@/lib/definitions';
+"use client";
+import React, { useState } from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Clock, Building2, Bell } from "lucide-react";
+import { useSettings } from "@/contexts/SettingsContext";
+import { TimeSpan } from "@/lib/definitions";
 
 const AdminSettings = () => {
-  const { timeSpans, addTimeSpan, updateTimeSpan } = useSettings();
+  const { timeSpans, addTimeSpan, updateTimeSpan, saveChanges } = useSettings();
 
   // State for business settings
   const [businessSettings, setBusinessSettings] = useState({
-    businessName: 'My Business',
-    location: '',
-    timezone: 'UTC-5',
+    businessName: "My Business",
+    location: "",
+    timezone: "UTC-5",
     enableNotifications: true,
-    autoSchedule: false
+    autoSchedule: false,
   });
 
-  const handleTimeSpanChange = (id: number, field: keyof Omit<TimeSpan,'id'>, value: string) => {
-    const span = timeSpans.find(s => s.id === id);
+  const handleTimeSpanChange = (
+    id: number,
+    field: keyof Omit<TimeSpan, "id">,
+    value: string,
+  ) => {
+    const span = timeSpans.find((s) => s.id === id);
     if (!span) return;
     const updated = { ...span, [field]: value } as TimeSpan;
     updateTimeSpan(updated);
@@ -44,20 +54,24 @@ const AdminSettings = () => {
               <label className="text-sm font-medium">Business Name</label>
               <Input
                 value={businessSettings.businessName}
-                onChange={(e) => setBusinessSettings({
-                  ...businessSettings,
-                  businessName: e.target.value
-                })}
+                onChange={(e) =>
+                  setBusinessSettings({
+                    ...businessSettings,
+                    businessName: e.target.value,
+                  })
+                }
               />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Timezone</label>
               <Select
                 value={businessSettings.timezone}
-                onValueChange={(value) => setBusinessSettings({
-                  ...businessSettings,
-                  timezone: value
-                })}
+                onValueChange={(value) =>
+                  setBusinessSettings({
+                    ...businessSettings,
+                    timezone: value,
+                  })
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select timezone" />
@@ -85,12 +99,17 @@ const AdminSettings = () => {
         <CardContent>
           <div className="space-y-4">
             {timeSpans.map((span) => (
-              <div key={span.id} className="grid grid-cols-3 gap-4 p-4 border rounded-lg">
+              <div
+                key={span.id}
+                className="grid grid-cols-3 gap-4 p-4 border rounded-lg"
+              >
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Shift Name</label>
                   <Input
                     value={span.name}
-                    onChange={(e) => handleTimeSpanChange(span.id, 'name', e.target.value)}
+                    onChange={(e) =>
+                      handleTimeSpanChange(span.id, "name", e.target.value)
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -98,7 +117,13 @@ const AdminSettings = () => {
                   <Input
                     type="time"
                     value={span.start_time}
-                    onChange={(e) => handleTimeSpanChange(span.id, 'start_time', e.target.value)}
+                    onChange={(e) =>
+                      handleTimeSpanChange(
+                        span.id,
+                        "start_time",
+                        e.target.value,
+                      )
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -106,12 +131,20 @@ const AdminSettings = () => {
                   <Input
                     type="time"
                     value={span.end_time}
-                    onChange={(e) => handleTimeSpanChange(span.id, 'end_time', e.target.value)}
+                    onChange={(e) =>
+                      handleTimeSpanChange(span.id, "end_time", e.target.value)
+                    }
                   />
                 </div>
               </div>
             ))}
-            <Button variant="outline" className="w-full" onClick={() => addTimeSpan({ name: '', start_time: '', end_time: '' })}>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() =>
+                addTimeSpan({ name: "", start_time: "", end_time: "" })
+              }
+            >
               Add Time Span
             </Button>
           </div>
@@ -131,27 +164,35 @@ const AdminSettings = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-medium">Enable Notifications</h3>
-                <p className="text-sm text-gray-500">Receive alerts for schedule changes and requests</p>
+                <p className="text-sm text-gray-500">
+                  Receive alerts for schedule changes and requests
+                </p>
               </div>
               <Switch
                 checked={businessSettings.enableNotifications}
-                onCheckedChange={(checked) => setBusinessSettings({
-                  ...businessSettings,
-                  enableNotifications: checked
-                })}
+                onCheckedChange={(checked) =>
+                  setBusinessSettings({
+                    ...businessSettings,
+                    enableNotifications: checked,
+                  })
+                }
               />
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-medium">Auto-Schedule</h3>
-                <p className="text-sm text-gray-500">Automatically generate schedules based on availability</p>
+                <p className="text-sm text-gray-500">
+                  Automatically generate schedules based on availability
+                </p>
               </div>
               <Switch
                 checked={businessSettings.autoSchedule}
-                onCheckedChange={(checked) => setBusinessSettings({
-                  ...businessSettings,
-                  autoSchedule: checked
-                })}
+                onCheckedChange={(checked) =>
+                  setBusinessSettings({
+                    ...businessSettings,
+                    autoSchedule: checked,
+                  })
+                }
               />
             </div>
           </div>
@@ -160,7 +201,7 @@ const AdminSettings = () => {
 
       {/* Save Changes */}
       <div className="flex justify-end">
-        <Button className="px-6">
+        <Button className="px-6" onClick={saveChanges}>
           Save Changes
         </Button>
       </div>
