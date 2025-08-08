@@ -5,15 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Clock, Building2, Users, Bell, Shield } from 'lucide-react';
+import { Clock, Building2, Bell } from 'lucide-react';
+import { useSettings } from '@/contexts/SettingsContext';
 
 const AdminSettings = () => {
-  // State for time spans
-  const [timeSpans, setTimeSpans] = useState([
-    { id: 1, name: 'Morning', startTime: '06:00', endTime: '14:00' },
-    { id: 2, name: 'Afternoon', startTime: '14:00', endTime: '22:00' },
-    { id: 3, name: 'Night', startTime: '22:00', endTime: '06:00' }
-  ]);
+  const { timeSpans, setTimeSpans } = useSettings();
 
   // State for business settings
   const [businessSettings, setBusinessSettings] = useState({
@@ -30,6 +26,13 @@ const AdminSettings = () => {
         span.id === id ? { ...span, [field]: value } : span
       )
     );
+  };
+
+  const handleAddTimeSpan = () => {
+    setTimeSpans(spans => [
+      ...spans,
+      { id: spans.length + 1, name: 'New Span', startTime: '00:00', endTime: '00:00' }
+    ]);
   };
 
   return (
@@ -115,7 +118,7 @@ const AdminSettings = () => {
                 </div>
               </div>
             ))}
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full" onClick={handleAddTimeSpan}>
               Add Time Span
             </Button>
           </div>
