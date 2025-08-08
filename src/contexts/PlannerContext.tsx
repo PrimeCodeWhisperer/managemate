@@ -16,9 +16,7 @@ const defaultContextValue: PlannerContextType = {
   timeLabels: [],
   dateRange: { from: startOfWeek(new Date()), to: endOfDay(new Date()) },
   currentDateRange: { from: startOfDay(new Date()), to: endOfDay(new Date()) },
-  setDateRange: (dateRange: DateRange) => {
-    console.log(dateRange);
-  },
+  setDateRange: (_dateRange: DateRange) => {},
 };
 
 const PlannerContext = createContext<PlannerContextType>(defaultContextValue);

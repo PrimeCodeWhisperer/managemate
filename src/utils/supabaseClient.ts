@@ -1,28 +1,7 @@
 import { createClient } from './supabase/client';
 import { endOfWeek, startOfWeek, format, startOfDay, endOfDay } from 'date-fns';
-import { Employee,Shift,User,UpcomingShift } from '@/lib/definitions';
+import { Shift, UpcomingShift } from '@/lib/definitions';
 
-
-export async function getUser(user_id?:string):Promise<User|undefined>{
-  const supabase = createClient();
-
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id',user_id);
-    if(data){
-      return {
-        id:data[0].id,
-        username:data[0].username,
-        first_name:data[0].first_name,
-        last_name:data[0].last_name,
-        avatar_url:data[0].avatar_url,
-        password:data[0].password,
-        email:data[0].email,
-        role:data[0].role,
-      };
-    }
-}
 export async function updateSelectedShifts(updated_shifts:Shift[]){
   
 
@@ -54,8 +33,6 @@ export async function pubblishShifts(draft_shifts:Shift[],weekStart:Date){
       throw error
     }
 
-    console.log('Shifts inserted successfully:', data)
-    
     return data
   } catch (error) {
     console.error('Unexpected error while inserting shifts:', error)
@@ -73,7 +50,6 @@ export async function fetchShiftInsertion(currentWeek:Date){
     .select('*')
     .gte('week_start', startOfThisWeek.toISOString())
     .lte('week_start', endOfThisWeek.toISOString());
-  console.log(endOfThisWeek)
   if(error){
     console.error('Error fetching shifts planning:', error);
     return false;
@@ -100,8 +76,6 @@ export async function fetchShifts(currentWeek: Date): Promise<Shift[] | undefine
 
   const { data, error } = await query; // Execute the query
 
-  console.log(startWeekString, endWeekString);
-  console.log(data);
 
   if (error) {
     console.error('Error fetching shifts:', error);
@@ -128,8 +102,6 @@ export async function fetchOpenShifts(currentWeek: Date): Promise<Shift[] | unde
 
   const { data, error } = await query; // Execute the query
 
-  console.log(startWeekString, endWeekString);
-  console.log(data);
 
   if (error) {
     console.error('Error fetching shifts:', error);
@@ -178,20 +150,4 @@ export async function fetchEmployeeAvailabilityByWeek(currentWeek:Date){
         return data.length;
       }
 
-}
-export async function fetchEmployees():Promise<Employee[]|undefined>{
-  
-  const supabase = createClient()
-  const { data, error } = await supabase.from('profiles').select('*',{count:'exact'}).eq('role','employee')
-  if(data){
-    const emp:Employee[]=data.map((employee)=>{
-      return{
-        user_id:employee.id.toString(),
-        name:employee.username.toString(),        
-        image:employee.avatar_url?.toString(),  
-        email:employee.email?.toString(),      
-      };
-    })
-    return emp;
-  }
 }

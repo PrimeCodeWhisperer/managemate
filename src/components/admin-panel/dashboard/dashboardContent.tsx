@@ -12,7 +12,6 @@ export default function DashboardContent(){
     const [selectedDate,setSelectedDate]=useState<null|Date>(new Date);
     const handleSelectedDay=(date:Date|null)=>{
         setSelectedDate(date);
-        console.log(date)
     } 
     const upcomingShifts = [
         { id: 1, date: '2023-06-15', time: '09:00 AM - 05:00 PM', role: 'Cashier' },

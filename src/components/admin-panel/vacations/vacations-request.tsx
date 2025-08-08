@@ -8,10 +8,9 @@ import { Loader2, Check, X } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { format } from 'date-fns'
-import { useSupabaseData } from '@/contexts/SupabaseContext'
 import { Employee } from '@/lib/definitions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { fetchEmployees } from '@/utils/supabaseClient'
+import { useSupabaseData } from '@/contexts/SupabaseContext'
 
 interface VacationRequest {
   id: string
@@ -27,6 +26,7 @@ export default function VacationRequestsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const supabase = createClient()
+  const { employees } = useSupabaseData()
 
   useEffect(() => {
     const fetchVacationRequests = async () => {
@@ -45,14 +45,12 @@ export default function VacationRequestsPage() {
         if (error) {
           throw error
         }
-        const employees  =await fetchEmployees()
-
-        console.log(employees)
-
-        setRequests(data?.map(item => ({
-          ...item,
-          employee: employees?.find(e=> e.user_id==item.employee_id)
-        })) || [])
+        setRequests(
+          data?.map(item => ({
+            ...item,
+            employee: employees?.find(e => e.user_id == item.employee_id),
+          })) || []
+        )
       } catch (error: any) {
         setError('Error fetching vacation requests: ' + error.message)
       } finally {
@@ -60,12 +58,13 @@ export default function VacationRequestsPage() {
       }
     }
 
-    fetchVacationRequests()
-  }, [])
+    if (employees) {
+      fetchVacationRequests()
+    }
+  }, [employees, supabase])
 
   const handleStatusUpdate = async (id: string, newStatus: 'approved' | 'rejected') => {
     try {
-      console.log(newStatus)
       const { error } = await supabase
         .from('vacations_requests')
         .update({ status: newStatus })

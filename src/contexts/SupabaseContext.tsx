@@ -2,15 +2,14 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { createClient } from '../utils/supabase/client';
 import { Employee, User } from '@/lib/definitions';
-import { fetchEmployees, getUser } from '@/utils/supabaseClient';
+import { fetchEmployees, getUser } from '@/utils/api';
 
-const supabase =createClient();
-// Define the shape of the data you expect from Supabase
+const supabase = createClient();
 
 // Define the shape of the context
 interface SupabaseDataContextType {
   data: User | undefined;
-  employees:Employee[] | undefined;
+  employees: Employee[] | undefined;
   loading: boolean;
   error: string | null;
 }
@@ -28,27 +27,51 @@ export const SupabaseDataProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      try {
+        const cachedEmployees = localStorage.getItem('employees');
+        const cachedUser = localStorage.getItem('userData');
 
-      const data=await getUser(user?.id)
-      const employees_list=await fetchEmployees();
-      if (error) {
-        setError(error);
-      } else {
-        setData(data);
-        setEmployees(employees);
+        let employeesData: Employee[] | undefined = cachedEmployees
+          ? JSON.parse(cachedEmployees)
+          : undefined;
+        let userData: User | undefined = cachedUser
+          ? JSON.parse(cachedUser)
+          : undefined;
+
+        if (!employeesData || !userData) {
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+
+          if (!userData) {
+            userData = await getUser(user?.id);
+            if (userData) {
+              localStorage.setItem('userData', JSON.stringify(userData));
+            }
+          }
+
+          if (!employeesData) {
+            employeesData = await fetchEmployees();
+            if (employeesData) {
+              localStorage.setItem('employees', JSON.stringify(employeesData));
+            }
+          }
+        }
+
+        setData(userData);
+        setEmployees(employeesData);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     fetchData();
   }, []);
 
   return (
-    <SupabaseDataContext.Provider value={{ data,employees, loading, error }}>
+    <SupabaseDataContext.Provider value={{ data, employees, loading, error }}>
       {children}
     </SupabaseDataContext.Provider>
   );
