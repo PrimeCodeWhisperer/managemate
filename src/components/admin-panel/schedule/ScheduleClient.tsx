@@ -24,7 +24,6 @@ export default function ScheduleClient({
     const checkShiftInserted = async () => {
       const shiftInserted = await fetchShiftInsertion(currentWeek)
       setWeekPlanned(shiftInserted)
-      console.log(currentWeek)
     }
     checkShiftInserted()
   }, [currentWeek])

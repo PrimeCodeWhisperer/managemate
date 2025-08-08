@@ -16,7 +16,6 @@ export async function getUserName(user_id?:string):Promise<User|undefined>{
           first_name:data[0].first_name,
           last_name:data[0].last_name,
           avatar_url:data[0].avatar_url,
-          password:data[0].password,
           email:data[0].email,
           role:data[0].role,
         };

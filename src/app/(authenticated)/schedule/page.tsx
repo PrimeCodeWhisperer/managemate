@@ -16,7 +16,6 @@ import { useEmployees } from "@/hooks/use-employees";
 
 export default async function PostsPage() {
   const employees=await getEmployees();
-  console.log(employees)
   return (
     <ContentLayout title="All Posts">
       <Breadcrumb>

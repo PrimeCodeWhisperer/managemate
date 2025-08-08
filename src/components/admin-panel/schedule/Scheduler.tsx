@@ -6,7 +6,8 @@ import { addDays, format, parseISO, isSameDay, isWithinInterval, differenceInHou
 import { Employee, Shift,UpcomingShift } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { fetchEmployees, pubblishShifts } from '@/utils/supabaseClient';
+import { pubblishShifts } from '@/utils/supabaseClient';
+import { fetchEmployees } from '@/utils/api';
 import CustomShiftDialog from './CustomShiftDialog';
 import {DropdownMenu, DropdownMenuContent, DropdownMenuTrigger,DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { redirect, useRouter } from 'next/navigation';
@@ -156,7 +157,6 @@ export default function Component(props: SchedulerProps) {
     }
   },[props.shifts]);
   const renderWeekSchedule = () => {
-    console.log(draft_shifts)
     return (
       <Card >
         <CardContent className="p-0">
