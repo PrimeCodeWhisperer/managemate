@@ -22,10 +22,30 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { useSupabaseData } from "@/contexts/SupabaseContext";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
 
 export function UserNav() {
   const {data}=useSupabaseData();
+  const router = useRouter()
+    const supabase = createClient()
+    const handleLogout = async () => {
+      try {
+        const { error } = await supabase.auth.signOut()
+        if (error) {
+          throw error
+        }
+        router.push('/') // Redirect to home page after logout
+        router.refresh() // Refresh the current route
 
+        //router.refresh() doesn't work, i try to fix it with this:
+
+        //window.location.reload()
+      } catch (error) {
+        console.error('Error logging out:', error)
+      } finally {
+      }
+    }
   return (
     <DropdownMenu>
       <TooltipProvider disableHoverableContent>
@@ -72,7 +92,7 @@ export function UserNav() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="hover:cursor-pointer" onClick={() => {}}>
+        <DropdownMenuItem className="hover:cursor-pointer" onClick={handleLogout}>
           <LogOut className="w-4 h-4 mr-3 text-muted-foreground" />
           Sign out
         </DropdownMenuItem>
