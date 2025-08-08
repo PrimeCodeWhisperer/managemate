@@ -1,7 +1,10 @@
 import { Employee, User } from "@/lib/definitions";
 
 const fetcher = async <T>(url: string): Promise<T> => {
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    credentials: "include",
+    cache: "no-store",
+  });
   if (!res.ok) {
     throw new Error("Network response was not ok");
   }
