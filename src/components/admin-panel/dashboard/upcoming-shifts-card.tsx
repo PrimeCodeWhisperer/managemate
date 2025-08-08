@@ -2,28 +2,23 @@
 import { format } from "date-fns"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { fetchShiftsForToday, fetchEmployees } from "@/utils/supabaseClient"
+import { fetchShiftsForToday } from "@/utils/supabaseClient"
 import { Shift } from "@/lib/definitions"
-import { Employee } from "@/lib/definitions"
 import { useEffect, useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 
 
 export default function UpcomingShiftsCard() {
-  const [shiftsForSelectedDate,setShiftsForSelectedDate]=useState<Shift[]|undefined>([]);    
-  const [employees,setEmployees]=useState<Employee[]|undefined>([]);    
-  const date=new Date();
-  useEffect(()=>{
-    const fetchData=async ()=>{
+  const [shiftsForSelectedDate, setShiftsForSelectedDate] = useState<Shift[] | undefined>([]);
+  const date = new Date();
+  useEffect(() => {
+    const fetchData = async () => {
       const shiftsForSelectedDate = await fetchShiftsForToday(date);
-      const employees=await fetchEmployees();    
       setShiftsForSelectedDate(shiftsForSelectedDate);
-      setEmployees(employees);
-    }
+    };
     fetchData();
-    console.log(shiftsForSelectedDate)
-  },[date])
+  }, [date]);
   return (
     <Card>
         <CardHeader>

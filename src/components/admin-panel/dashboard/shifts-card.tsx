@@ -2,27 +2,24 @@
 import { format } from "date-fns"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { fetchShiftsForToday, fetchEmployees } from "@/utils/supabaseClient"
+import { fetchShiftsForToday } from "@/utils/supabaseClient"
 import { Shift } from "@/lib/definitions"
-import { Employee } from "@/lib/definitions"
 import { useEffect, useState } from "react"
+import { useSupabaseData } from "@/contexts/SupabaseContext"
 interface ShiftScheduleCardProps {
   date: Date
 }
 
 export default function ShiftsCard({ date }: ShiftScheduleCardProps) {
-  const [shiftsForSelectedDate,setShiftsForSelectedDate]=useState<Shift[]|undefined>([]);    
-  const [employees,setEmployees]=useState<Employee[]|undefined>([]);    
+  const [shiftsForSelectedDate,setShiftsForSelectedDate]=useState<Shift[]|undefined>([]);
+  const { employees } = useSupabaseData();
 
   useEffect(()=>{
     const fetchData=async ()=>{
       const shiftsForSelectedDate = await fetchShiftsForToday(date);
-      const employees=await fetchEmployees();    
       setShiftsForSelectedDate(shiftsForSelectedDate);
-      setEmployees(employees);
     }
     fetchData();
-    console.log(shiftsForSelectedDate)
   },[date])
   return (
     <Card className=" max-w-md mx-auto">

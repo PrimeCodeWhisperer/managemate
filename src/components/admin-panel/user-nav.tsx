@@ -21,10 +21,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { getUser } from "@/utils/supabaseClient";
-import { useEffect, useState } from "react";
-import { User } from "@/lib/definitions";
-import { createClient } from "@/utils/supabase/client";
 import { useSupabaseData } from "@/contexts/SupabaseContext";
 
 export function UserNav() {
