@@ -57,7 +57,15 @@ export default function ProfilesPage() {
         throw error
       }
 
-      setProfiles(profiles.filter(profile => profile.id !== id))
+      const updatedProfiles = profiles.filter(profile => profile.id !== id)
+      setProfiles(updatedProfiles)
+
+      const cachedEmployees = localStorage.getItem('employees')
+      if (cachedEmployees) {
+        const employees = JSON.parse(cachedEmployees) as Profile[]
+        const updatedEmployees = employees.filter(employee => employee.id !== id)
+        localStorage.setItem('employees', JSON.stringify(updatedEmployees))
+      }
     } catch (error: any) {
       setError('Error deleting profile: ' + error.message)
     }
