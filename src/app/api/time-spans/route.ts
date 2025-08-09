@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 export async function GET() {
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("time_spans")
     .select("*")
@@ -16,7 +16,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const body = await request.json();
   const { data, error } = await supabase
     .from("time_spans")
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const body = await request.json();
   const id = Number(body.id);
   if (!id) {
@@ -62,7 +62,7 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const url = new URL(request.url);
   const id = Number(url.searchParams.get("id"));
 
