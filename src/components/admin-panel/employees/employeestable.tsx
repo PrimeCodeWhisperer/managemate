@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar,AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { EmployeeInfoDialog } from './employee-info-dialog'
 import { fetchEmployees } from '@/utils/api'
+import { AddEmployeeDialog } from "./add-employee-dialog"
 
 interface Profile {
   id: string
@@ -84,8 +85,9 @@ export default function ProfilesPage() {
 
   return (
     <Card className="rounded-lg border-none mt-6">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle >Employees list</CardTitle>
+            <AddEmployeeDialog />
         </CardHeader>
         <CardContent>
             <Table>
