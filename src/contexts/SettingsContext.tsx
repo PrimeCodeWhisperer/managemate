@@ -1,39 +1,95 @@
-'use client'
-import React, { createContext, useContext, useState } from 'react';
+"use client";
 
-interface TimeSpan {
-  id: number;
-  name: string;
-  startTime: string;
-  endTime: string;
-}
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { TimeSpan } from "@/lib/definitions";
 
-interface SettingsContextValue {
+interface SettingsContextType {
   timeSpans: TimeSpan[];
-  setTimeSpans: React.Dispatch<React.SetStateAction<TimeSpan[]>>;
+  addTimeSpan: (span: Omit<TimeSpan, "id">) => void;
+  updateTimeSpan: (span: TimeSpan) => void;
+  saveChanges: () => Promise<void>;
 }
 
-const defaultTimeSpans: TimeSpan[] = [
-  { id: 1, name: 'Morning', startTime: '06:00', endTime: '14:00' },
-  { id: 2, name: 'Afternoon', startTime: '14:00', endTime: '22:00' },
-  { id: 3, name: 'Night', startTime: '22:00', endTime: '06:00' }
-];
+const SettingsContext = createContext<SettingsContextType | undefined>(
+  undefined,
+);
 
-const SettingsContext = createContext<SettingsContextValue>({
-  timeSpans: defaultTimeSpans,
-  setTimeSpans: () => {}
-});
+export const SettingsProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
+  const [timeSpans, setTimeSpans] = useState<TimeSpan[]>([]);
 
-export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [timeSpans, setTimeSpans] = useState<TimeSpan[]>(defaultTimeSpans);
+  useEffect(() => {
+    const fetchSpans = async () => {
+      const res = await fetch("/api/time-spans", { cache: "no-store" });
+      if (res.ok) {
+        const data: TimeSpan[] = await res.json();
+        setTimeSpans(data);
+      }
+    };
+    fetchSpans();
+  }, []);
+
+  const addTimeSpan = (span: Omit<TimeSpan, "id">) => {
+    setTimeSpans((prev) => [...prev, { id: Date.now() * -1, ...span }]);
+  };
+
+  const updateTimeSpan = (span: TimeSpan) => {
+    setTimeSpans((prev) =>
+      prev.map((s) => (s.id === span.id ? { ...span } : s)),
+    );
+  };
+
+  const saveChanges = async () => {
+    for (const span of timeSpans) {
+      if (span.id < 0) {
+        const res = await fetch("/api/time-spans", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: span.name,
+            start_time: span.start_time,
+            end_time: span.end_time,
+          }),
+        });
+        if (res.ok) {
+          const saved: TimeSpan = await res.json();
+          setTimeSpans((prev) =>
+            prev.map((s) => (s.id === span.id ? saved : s)),
+          );
+        }
+      } else {
+        await fetch("/api/time-spans", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(span),
+        });
+      }
+    }
+
+    const res = await fetch("/api/time-spans", { cache: "no-store" });
+    if (res.ok) {
+      const data: TimeSpan[] = await res.json();
+      setTimeSpans(data);
+    }
+  };
 
   return (
-    <SettingsContext.Provider value={{ timeSpans, setTimeSpans }}>
+    <SettingsContext.Provider
+      value={{ timeSpans, addTimeSpan, updateTimeSpan, saveChanges }}
+    >
+
       {children}
     </SettingsContext.Provider>
   );
 };
 
-export const useSettings = () => useContext(SettingsContext);
-
-export type { TimeSpan };
+export const useSettings = () => {
+  const ctx = useContext(SettingsContext);
+  if (!ctx) {
+    throw new Error("useSettings must be used within a SettingsProvider");
+  }
+  return ctx;
+};

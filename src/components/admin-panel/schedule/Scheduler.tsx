@@ -14,7 +14,7 @@ import clsx from 'clsx';
 import EditShiftDialog from './EditShiftDialog';
 import InfoShiftDialog from './InfoShiftDialog';
 import { useSupabaseData } from '@/contexts/SupabaseContext';
-import { useSettings, TimeSpan } from '@/contexts/SettingsContext';
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface Availability {
   week_start: string;
@@ -183,15 +183,18 @@ export default function Component(props: SchedulerProps) {
                 {days_objs.map((day, dayIndex) => {
                   const filteredShifts = draft_shifts?.filter(shift =>
                     isSameDay(shift.date, day) &&
-                    isTimeWithinSpan(shift.start_time, span)
+                    isWithinInterval(parseISO(`2000-01-01T${shift.start_time}`), {
+                      start: parseISO(`2000-01-01T${span.start_time}`),
+                      end: parseISO(`2000-01-01T${span.end_time}`)
+                    })
                   );
 
                   return (
                     <div key={`${format(day, 'yyyy-MM-dd')}-${span.id}`} className="bg-background p-2 min-h-[120px] w-full">
-                      {filteredShifts?.sort((a, b) => a.start_time.localeCompare(b.start_time)).map((shift, index) => {
+                      {filteredShifts?.sort(function(a,b){return a.start_time.localeCompare(b.start_time)}).map((shift, index) => {
                         const employee = employees?.find(emp => emp.user_id === shift.user_id);
                         const startTime = parseISO(`2000-01-01T${shift.start_time}`);
-                        
+
                         return (
                           <DropdownMenu key={`${shift.user_id}-${dayIndex}-${span.id}-${index}`} >
                             <DropdownMenuTrigger asChild className='w-full'>
