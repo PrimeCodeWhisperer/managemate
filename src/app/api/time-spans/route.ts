@@ -55,3 +55,18 @@ export async function PUT(request: Request) {
 
   return NextResponse.json(data);
 }
+
+export async function DELETE(request: Request) {
+  const supabase = createClient();
+  const body = await request.json();
+  const { error } = await supabase
+    .from("time_spans")
+    .delete()
+    .eq("id", body.id);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ id: body.id });
+}
