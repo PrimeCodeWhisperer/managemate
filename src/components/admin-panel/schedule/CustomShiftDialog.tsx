@@ -20,6 +20,7 @@ const CustomShiftDialog: React.FC<CustomShiftDialogProps> = ({ isOpen, onClose, 
   const [employee, setEmployee] = useState<string>('');
   const [startTime, setStartTime] = useState<string>('');
   const [isOpenShift,setIsOpenShift]=useState<boolean>(false)
+  
 
   const handleSave = () => {
     onSave({ user_id: employee, start_time: startTime ,open_shift:isOpenShift});
