@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/utils/supabase/admin";
+import { createClient } from "@/utils/supabase/server";
 
 export async function GET() {
-  const supabase = createAdminClient();
+  const supabase = createClient();
   const { data, error } = await supabase
     .from("time_spans")
     .select("*")
@@ -16,7 +16,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const supabase = createAdminClient();
+  const supabase = createClient();
   const body = await request.json();
   const { data, error } = await supabase
     .from("time_spans")
@@ -36,76 +36,55 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const supabase = createAdminClient();
+  const supabase = createClient();
   const body = await request.json();
   const id = Number(body.id);
   if (!Number.isInteger(id)) {
     return NextResponse.json({ error: "Valid id is required" }, { status: 400 });
   }
 
-  const { data: existing, error: fetchError } = await supabase
-    .from("time_spans")
-    .select("id")
-    .eq("id", id)
-    .maybeSingle();
-
-  if (fetchError) {
-    return NextResponse.json({ error: fetchError.message }, { status: 500 });
-  }
-  if (!existing) {
-    return NextResponse.json({ error: "Time span not found" }, { status: 404 });
-  }
-
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("time_spans")
     .update({
       name: body.name,
       start_time: body.start_time,
       end_time: body.end_time,
     })
-    .eq("id", id);
+    .eq("id", id)
+    .select()
+    .maybeSingle();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+  if (!data) {
+    return NextResponse.json({ error: "Time span not found" }, { status: 404 });
+  }
 
-  return NextResponse.json({
-    id,
-    name: body.name,
-    start_time: body.start_time,
-    end_time: body.end_time,
-  });
+  return NextResponse.json(data);
 }
 
 export async function DELETE(request: Request) {
-  const supabase = createAdminClient();
+  const supabase = createClient();
   const body = await request.json();
   const id = Number(body.id);
   if (!Number.isInteger(id)) {
     return NextResponse.json({ error: "Valid id is required" }, { status: 400 });
   }
 
-  const { data: existing, error: fetchError } = await supabase
-    .from("time_spans")
-    .select("id")
-    .eq("id", id)
-    .maybeSingle();
-
-  if (fetchError) {
-    return NextResponse.json({ error: fetchError.message }, { status: 500 });
-  }
-  if (!existing) {
-    return NextResponse.json({ error: "Time span not found" }, { status: 404 });
-  }
-
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("time_spans")
     .delete()
-    .eq("id", id);
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+  if (!data) {
+    return NextResponse.json({ error: "Time span not found" }, { status: 404 });
+  }
 
-  return NextResponse.json({ id });
+  return NextResponse.json({ id: data.id });
 }
