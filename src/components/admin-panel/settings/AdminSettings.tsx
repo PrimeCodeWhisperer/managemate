@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Clock, Building2, Bell } from "lucide-react";
+import { Clock, Building2, Bell, Trash2 } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
 import { TimeSpan } from "@/lib/definitions";
 
@@ -99,49 +99,53 @@ const AdminSettings = () => {
         <CardContent>
           <div className="space-y-4">
             {timeSpans.map((span) => (
-              <div
-                key={span.id}
-                className="grid grid-cols-4 gap-4 p-4 border rounded-lg"
-              >
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Shift Name</label>
-                  <Input
-                    value={span.name}
-                    onChange={(e) =>
-                      handleTimeSpanChange(span.id, "name", e.target.value)
-                    }
-                  />
+              <div key={span.id} className=" flex border rounded-lg">
+                <div
+                  //className="grid grid-cols-4 gap-4 p-4 border rounded-lg"
+                  className="grid grid-cols-3 gap-4 p-4 w-full "
+                >
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Shift Name</label>
+                    <Input
+                      value={span.name}
+                      onChange={(e) =>
+                        handleTimeSpanChange(span.id, "name", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Start Time</label>
+                    <Input
+                      type="time"
+                      value={span.start_time}
+                      onChange={(e) =>
+                        handleTimeSpanChange(
+                          span.id,
+                          "start_time",
+                          e.target.value,
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">End Time</label>
+                    <Input
+                      type="time"
+                      value={span.end_time}
+                      onChange={(e) =>
+                        handleTimeSpanChange(span.id, "end_time", e.target.value)
+                      }
+                    />
+                  </div>
+
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Start Time</label>
-                  <Input
-                    type="time"
-                    value={span.start_time}
-                    onChange={(e) =>
-                      handleTimeSpanChange(
-                        span.id,
-                        "start_time",
-                        e.target.value,
-                      )
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">End Time</label>
-                  <Input
-                    type="time"
-                    value={span.end_time}
-                    onChange={(e) =>
-                      handleTimeSpanChange(span.id, "end_time", e.target.value)
-                    }
-                  />
-                </div>
-                <div className="flex items-end">
+                <div className="flex items-end justify-end p-4">
                   <Button
                     variant="destructive"
+                    size="icon"
                     onClick={() => removeTimeSpan(span.id)}
                   >
-                    Remove
+                    <Trash2 className="h-6 w-4" />
                   </Button>
                 </div>
               </div>
