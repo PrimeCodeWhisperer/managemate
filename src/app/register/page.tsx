@@ -28,16 +28,18 @@ export default function RegisterPage() {
       return redirect("/register?message=Could not create user");
     }
 
-    const { error: insertError } = await supabase.from('profiles').insert({
-      id: data.user.id,
-      username,
-      first_name: firstName,
-      last_name: lastName,
-      email,
-      role: 'employee'
-    });
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .upsert({
+        id: data.user.id,
+        username,
+        first_name: firstName,
+        last_name: lastName,
+        email,
+        role: 'employee',
+      });
 
-    if (insertError) {
+    if (profileError) {
       return redirect("/register?message=Could not create profile");
     }
 
