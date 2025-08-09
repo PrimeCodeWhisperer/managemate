@@ -82,8 +82,10 @@ export const SettingsProvider = ({
     }
 
     for (const id of removedSpanIds) {
-      const res = await fetch(`/api/time-spans?id=${id}`, {
+      const res = await fetch("/api/time-spans", {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
       });
       if (!res.ok) {
         console.error("Failed to delete time span", await res.text());

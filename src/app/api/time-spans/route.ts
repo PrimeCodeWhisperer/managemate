@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/utils/supabase/admin";
+import { createClient } from "@/utils/supabase/server";
 
 export async function GET() {
-  const supabase = createAdminClient();
+  const supabase = createClient();
   const { data, error } = await supabase
     .from("time_spans")
     .select("*")
@@ -16,7 +16,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const supabase = createAdminClient();
+  const supabase = createClient();
   const body = await request.json();
   const { data, error } = await supabase
     .from("time_spans")
@@ -36,13 +36,8 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const supabase = createAdminClient();
+  const supabase = createClient();
   const body = await request.json();
-  const id = Number(body.id);
-  if (!Number.isInteger(id) || id <= 0) {
-    return NextResponse.json({ error: "valid id is required" }, { status: 400 });
-  }
-
   const { data, error } = await supabase
     .from("time_spans")
     .update({
@@ -50,7 +45,7 @@ export async function PUT(request: Request) {
       start_time: body.start_time,
       end_time: body.end_time,
     })
-    .eq("id", id)
+    .eq("id", body.id)
     .select()
     .single();
 
@@ -62,23 +57,16 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const supabase = createAdminClient();
-  const url = new URL(request.url);
-  const idParam = url.searchParams.get("id");
-  const id = Number(idParam);
-
-  if (!Number.isInteger(id) || id <= 0) {
-    return NextResponse.json({ error: "valid id is required" }, { status: 400 });
-  }
-
+  const supabase = createClient();
+  const body = await request.json();
   const { error } = await supabase
     .from("time_spans")
     .delete()
-    .eq("id", id);
+    .eq("id", body.id);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ id });
+  return NextResponse.json({ id: body.id });
 }
