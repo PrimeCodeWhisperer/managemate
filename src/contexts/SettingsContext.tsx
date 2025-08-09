@@ -79,10 +79,8 @@ export const SettingsProvider = ({
     }
 
     for (const id of removedSpanIds) {
-      await fetch("/api/time-spans", {
+      await fetch(`/api/time-spans?id=${id}`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
       });
     }
 
