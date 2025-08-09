@@ -7,6 +7,7 @@ interface SettingsContextType {
   timeSpans: TimeSpan[];
   addTimeSpan: (span: Omit<TimeSpan, "id">) => void;
   updateTimeSpan: (span: TimeSpan) => void;
+  removeTimeSpan: (id: number) => void;
   saveChanges: () => Promise<void>;
 }
 
@@ -20,6 +21,7 @@ export const SettingsProvider = ({
   children: React.ReactNode;
 }) => {
   const [timeSpans, setTimeSpans] = useState<TimeSpan[]>([]);
+  const [removedSpanIds, setRemovedSpanIds] = useState<number[]>([]);
 
   useEffect(() => {
     const fetchSpans = async () => {
@@ -40,6 +42,13 @@ export const SettingsProvider = ({
     setTimeSpans((prev) =>
       prev.map((s) => (s.id === span.id ? { ...span } : s)),
     );
+  };
+
+  const removeTimeSpan = (id: number) => {
+    setTimeSpans((prev) => prev.filter((s) => s.id !== id));
+    if (id > 0) {
+      setRemovedSpanIds((prev) => [...prev, id]);
+    }
   };
 
   const saveChanges = async () => {
@@ -69,6 +78,16 @@ export const SettingsProvider = ({
       }
     }
 
+    for (const id of removedSpanIds) {
+      await fetch("/api/time-spans", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+    }
+
+    setRemovedSpanIds([]);
+
     const res = await fetch("/api/time-spans", { cache: "no-store" });
     if (res.ok) {
       const data: TimeSpan[] = await res.json();
@@ -78,7 +97,7 @@ export const SettingsProvider = ({
 
   return (
     <SettingsContext.Provider
-      value={{ timeSpans, addTimeSpan, updateTimeSpan, saveChanges }}
+      value={{ timeSpans, addTimeSpan, updateTimeSpan, removeTimeSpan, saveChanges }}
     >
 
       {children}
