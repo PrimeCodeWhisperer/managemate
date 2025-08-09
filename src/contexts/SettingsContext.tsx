@@ -70,20 +70,26 @@ export const SettingsProvider = ({
           );
         }
       } else {
-        await fetch("/api/time-spans", {
+        const res = await fetch("/api/time-spans", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(span),
         });
+        if (!res.ok) {
+          console.error("Failed to update time span", await res.text());
+        }
       }
     }
 
     for (const id of removedSpanIds) {
-      await fetch("/api/time-spans", {
+      const res = await fetch("/api/time-spans", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
       });
+      if (!res.ok) {
+        console.error("Failed to delete time span", await res.text());
+      }
     }
 
     setRemovedSpanIds([]);
