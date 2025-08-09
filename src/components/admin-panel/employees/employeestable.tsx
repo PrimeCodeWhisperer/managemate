@@ -91,7 +91,7 @@ export default function ProfilesPage() {
 
   return (
     <Card className="rounded-lg border-none mt-6">
-        <CardHeader className="flex items-center justify-between">
+        <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle >Employees list</CardTitle>
             <AddEmployeeDialog />
         </CardHeader>
