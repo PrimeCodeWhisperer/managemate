@@ -39,8 +39,8 @@ export async function PUT(request: Request) {
   const supabase = createAdminClient();
   const body = await request.json();
   const id = Number(body.id);
-  if (!id) {
-    return NextResponse.json({ error: "id is required" }, { status: 400 });
+  if (!Number.isInteger(id) || id <= 0) {
+    return NextResponse.json({ error: "valid id is required" }, { status: 400 });
   }
 
   const { data, error } = await supabase
@@ -64,10 +64,11 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   const supabase = createAdminClient();
   const url = new URL(request.url);
-  const id = Number(url.searchParams.get("id"));
+  const idParam = url.searchParams.get("id");
+  const id = Number(idParam);
 
-  if (!id) {
-    return NextResponse.json({ error: "id is required" }, { status: 400 });
+  if (!Number.isInteger(id) || id <= 0) {
+    return NextResponse.json({ error: "valid id is required" }, { status: 400 });
   }
 
   const { error } = await supabase
