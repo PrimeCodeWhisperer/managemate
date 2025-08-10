@@ -20,8 +20,6 @@ export async function POST(req: NextRequest) {
   const {
     GMAIL_USERNAME,
     GMAIL_PASSWORD,
-    NEXT_PUBLIC_SUPABASE_URL,
-    SUPABASE_SERVICE_ROLE_KEY,
   } = process.env;
 
   if (!GMAIL_USERNAME || !GMAIL_PASSWORD) {
@@ -37,6 +35,7 @@ export async function POST(req: NextRequest) {
     email:email,
     password:password
   });
+ console.log("created")
 
   if (createUserError || !user) {
     return NextResponse.json(
@@ -47,11 +46,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  await supabase.from("profiles").upsert({
-    id: user.id,
-    email,
-    role: "employee",
-  });
   
   const otp = generateOtp();
   setOtp(email, otp, 10 * 60 * 1000);
@@ -65,7 +59,6 @@ export async function POST(req: NextRequest) {
       pass: GMAIL_PASSWORD,
     },
   });
-
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const loginUrl = `${baseUrl}/login?email=${encodeURIComponent(email)}&otp=${otp}`;

@@ -43,7 +43,7 @@ export default function ProfilesPage() {
 
     try {
       const { error } = await supabase.auth.admin.deleteUser(id)
-
+      console.log(error?.message)
       const updatedProfiles = profiles.filter(profile => profile.id !== id)
       setProfiles(updatedProfiles)
 
