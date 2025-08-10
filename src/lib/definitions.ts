@@ -12,6 +12,7 @@ export type Shift={
     user_id?:string;
     date:string;
     start_time:string;
+    end_time?:string;
     status?:string;
 }
 export type UpcomingShift={
@@ -40,6 +41,7 @@ export type Employee={
     username:string;
     first_name:string;
     last_name:string;
+    name?:string;
 }
 export type Availability= {
     week_start: string;
