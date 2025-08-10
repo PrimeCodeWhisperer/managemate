@@ -50,8 +50,7 @@ export async function PUT(request: Request) {
       end_time: body.end_time,
     })
     .eq("id", id)
-    .select()
-    .maybeSingle();
+    .select();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -71,19 +70,30 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Valid id is required" }, { status: 400 });
   }
 
-  const { data, error } = await supabase
+  const { data: existingRecord } = await supabase
+    .from("time_spans")
+    .select("id")
+    .eq("id", id)
+    .single();
+
+  if (!existingRecord) {
+    return NextResponse.json({ error: "Time span not found" }, { status: 404 });
+  }
+  console.log('DELETE - Found existing record:', existingRecord);
+
+  const { data, error, count } = await supabase
     .from("time_spans")
     .delete()
     .eq("id", id)
-    .select("id")
-    .maybeSingle();
+    .select(); // Add select to see what was deleted
+
+  console.log('DELETE - Result data:', data);
+  console.log('DELETE - Result error:', error);
+  console.log('DELETE - Result count:', count);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  if (!data) {
-    return NextResponse.json({ error: "Time span not found" }, { status: 404 });
-  }
 
-  return NextResponse.json({ id: data.id });
+  return NextResponse.json({ success: true, id });
 }
