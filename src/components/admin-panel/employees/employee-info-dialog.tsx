@@ -9,25 +9,8 @@ import { useEffect, useState } from "react"
 import { createClient } from "@/utils/supabase/client"
 import { format, startOfDay } from "date-fns"
 
-interface Profile {
-    id: string
-    email: string
-    first_name: string
-    last_name: string
-    username: string
-  }
-const employeeInfo = {
-    name: "Sarah J.",
-    role: "Waiter",
-    avatar: "/placeholder.svg?height=80&width=80",
-    upcomingShifts: [
-        { date: "Mon, May 15", time: "2PM - 10PM" },
-        { date: "Wed, May 17", time: "11AM - 7PM" },
-        { date: "Fri, May 19", time: "4PM - 12AM" },
-    ],
-}
 
-export function EmployeeInfoDialog({ employee }: { employee: Profile }) {
+export function EmployeeInfoDialog({ employee }: { employee: Employee }) {
     const [shifts,setShifts]=useState<Shift[]>([]);
     useEffect(()=>{
         const fetchUpcomingShifts = async ()=>{

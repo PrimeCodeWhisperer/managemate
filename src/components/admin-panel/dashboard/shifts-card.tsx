@@ -28,14 +28,14 @@ export default function ShiftsCard({ date }: ShiftScheduleCardProps) {
         {shiftsForSelectedDate?.length ? (
           <ul className="space-y-4">
             {shiftsForSelectedDate.map((shift:Shift) => {
-              const employee=employees?.find(e=>e.user_id===shift.user_id)
+              const employee=employees?.find(e=>e.id===shift.user_id)
               return(
               <li key={shift.id} className="flex items-center space-x-4 bg-secondary p-3 rounded-md">
                 <Avatar>
                   <AvatarFallback>{}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium">{employee?.name}</p>
+                  <p className="font-medium">{employee?.username}</p>
                   <p className="text-sm text-muted-foreground">{'Waiter'}</p>
                   <p className="text-sm text-muted-foreground">
                     {shift.start_time}

@@ -100,7 +100,7 @@ export default function Component(props: SchedulerProps) {
         console.error('Error fetching availabilities:', error);
       } else {
         const availability_list = data.map((list_item:any) => {
-          const employee = employees?.find(employee => employee.user_id === list_item.employee_id);
+          const employee = employees?.find(employee => employee.id === list_item.employee_id);
 
           return {
             ...list_item,
@@ -126,7 +126,7 @@ export default function Component(props: SchedulerProps) {
             const employee_availability = avail.availability[days[day_index]][0];
             if (employee_availability.start && employee_availability.end) {
               const shift: Shift = {
-                user_id: avail.employee?.user_id,
+                user_id: avail.employee?.id,
                 date: format(day, 'yyyy-MM-dd'),
                 start_time: employee_availability.start,
                 status: 'availability'
@@ -183,7 +183,7 @@ export default function Component(props: SchedulerProps) {
                   return (
                     <div key={`${format(day, 'yyyy-MM-dd')}-${span.id}`} className="bg-background p-2 min-h-[120px] w-full">
                       {filteredShifts?.sort(function(a,b){return a.start_time.localeCompare(b.start_time)}).map((shift, index) => {
-                        const employee = employees?.find(emp => emp.user_id === shift.user_id);
+                        const employee = employees?.find(emp => emp.id === shift.user_id);
                         const startTime = parseISO(`2000-01-01T${shift.start_time}`);
 
                         return (
@@ -193,7 +193,7 @@ export default function Component(props: SchedulerProps) {
                                 key={`${shift.user_id}-${dayIndex}-${span.id}-${index}`}
                                 className={clsx("text-sm bg-background/10 border rounded p-2 mb-1 flex flex-col select-none cursor-pointer w-full",shift.status==='availability'&&'bg-green-300 border-green-500',shift.status==='open' && 'bg-blue-300 border-blue-500')}
                               >
-                                <div className="flex justify-between items-center font-semibold truncate">{employee?.name}</div>
+                                <div className="flex justify-between items-center font-semibold truncate">{employee?.username}</div>
                                 <div className="text-xs text-foreground/60  flex justify-between items-center">
                                   <span >{format(startTime, 'h:mm a')}</span>
                                 </div>
@@ -255,7 +255,7 @@ export default function Component(props: SchedulerProps) {
         isOpen={isInfoShiftDialogOpen}
         onClose={()=>setIsInfoShiftDialogOpen(false)}
         shift={selectedShift}
-        employee={employees?.find(emp=>emp.user_id===selectedShift?.user_id)}
+        employee={employees?.find(emp=>emp.id===selectedShift?.user_id)}
       />
       <div className='flex justify-end mt-4'>
           {props.shifts ? (

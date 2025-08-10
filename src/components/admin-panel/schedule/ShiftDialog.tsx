@@ -65,8 +65,8 @@ const ShiftDialog: React.FC<ShiftDialogProps> = ({ isOpen, onClose, onSave, empl
             </SelectTrigger>
             <SelectContent>
               {employees?.map((emp) => (
-                <SelectItem key={emp.user_id} value={emp.user_id.toString()}>
-                  {emp.name}
+                <SelectItem key={emp.id} value={emp.id.toString()}>
+                  {emp.username}
                 </SelectItem>
               ))}
             </SelectContent>

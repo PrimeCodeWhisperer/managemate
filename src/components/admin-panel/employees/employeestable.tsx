@@ -11,32 +11,24 @@ import { Avatar,AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { EmployeeInfoDialog } from './employee-info-dialog'
 import { fetchEmployees } from '@/utils/api'
 import { AddEmployeeDialog } from "./add-employee-dialog"
+import { Employee } from '@/lib/definitions'
+import { useSupabaseData } from '@/contexts/SupabaseContext'
 
-interface Profile {
-  id: string
-  email: string
-  first_name: string
-  last_name: string
-  username: string
-}
 
 export default function ProfilesPage() {
-  const [profiles, setProfiles] = useState<Profile[]>([])
+  const {employees}=useSupabaseData()
+  const [profiles, setProfiles] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
-    const fetchProfiles = async () => {
+    const fetchProfiles = () => {
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-        if (error) {
-          throw error
+        if(employees){
+          setProfiles(employees||[])
         }
 
-        setProfiles(data || [])
       } catch (error: any) {
         setError('Error fetching profiles: ' + error.message)
       } finally {
@@ -45,7 +37,7 @@ export default function ProfilesPage() {
     }
 
     fetchProfiles()
-  }, [supabase])
+  }, [employees])
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this user?')) return
 

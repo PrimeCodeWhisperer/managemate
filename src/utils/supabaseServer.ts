@@ -22,23 +22,6 @@ export async function getUserName(user_id?:string):Promise<User|undefined>{
       }
   }
 
-  export async function getEmployees():Promise<Employee[]|undefined>{
-    const supabase = createClient();
-  
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*');
-        if(data){
-          return data.map((user)=>{
-            return{
-              user_id:user.id,
-              name:user.username,
-              image:'',
-              email:user.email
-            }
-          });
-        }
-}
 export async function fetchShiftsForToday(currentDate: Date): Promise<Shift[] | undefined> {
   const supabase = createClient();
 

@@ -28,37 +28,42 @@ export const SupabaseDataProvider = ({ children }: { children: ReactNode }) => {
     const fetchData = async () => {
       setLoading(true);
       try {
+        // Add cache version to invalidate when Employee type changes
+        const CACHE_VERSION = '2.0'; // Increment this whenever you change Employee type
+        const cachedVersion = localStorage.getItem('cacheVersion');
+
+        // Clear cache if version doesn't match
+        if (cachedVersion !== CACHE_VERSION) {
+          localStorage.removeItem('employees');
+          localStorage.removeItem('userData');
+          localStorage.setItem('cacheVersion', CACHE_VERSION);
+          console.log('Cache cleared due to version mismatch');
+        }
+
         const cachedEmployees = localStorage.getItem('employees');
         const cachedUser = localStorage.getItem('userData');
 
-        let employeesData: Employee[] | undefined = cachedEmployees
-          ? JSON.parse(cachedEmployees)
-          : undefined;
-        let userData: User | undefined = cachedUser
-          ? JSON.parse(cachedUser)
-          : undefined;
-
-        if (!employeesData || !userData) {
-          const {
-            data: { user },
-          } = await supabase.auth.getUser();
-
-          if (!userData) {
-            userData = await getUser(user?.id);
-            if (userData) {
-              localStorage.setItem('userData', JSON.stringify(userData));
-            }
-          }
-
-          if (!employeesData) {
-            employeesData = await fetchEmployees();
-            if (employeesData) {
-              localStorage.setItem('employees', JSON.stringify(employeesData));
-            }
+        let employeesData: Employee[] | undefined;
+        if (cachedEmployees && cachedVersion === CACHE_VERSION) {
+          try {
+            employeesData = JSON.parse(cachedEmployees);
+            console.log('Using cached employees');
+          } catch (parseError) {
+            console.error('Error parsing cached employees:', parseError);
+            localStorage.removeItem('employees');
+            employeesData = undefined;
           }
         }
 
-        setData(userData);
+        // If no valid cached data, fetch fresh
+        if (!employeesData) {
+          console.log('Fetching fresh employees data');
+          employeesData = await fetchEmployees();
+          if (employeesData) {
+            localStorage.setItem('employees', JSON.stringify(employeesData));
+          }
+        }
+
         setEmployees(employeesData);
       } catch (err: any) {
         setError(err.message);

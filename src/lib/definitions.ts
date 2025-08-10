@@ -34,10 +34,12 @@ export type AdminShiftInfo={
     date_end_time:Date;
 }
 export type Employee={
-    user_id:string;
-    name:string;
-    image:string;
+    id:string;
+    avatar_url:string;
     email:string;
+    username:string;
+    first_name:string;
+    last_name:string;
 }
 export type Availability= {
     week_start: string;
