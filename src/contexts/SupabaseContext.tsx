@@ -29,10 +29,9 @@ export const SupabaseDataProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       try {
         // Add cache version to invalidate when Employee type changes
-        const CACHE_VERSION = '2.0'; // Increment this whenever you change Employee type
+        const CACHE_VERSION = '2.0'; 
         const cachedVersion = localStorage.getItem('cacheVersion');
 
-        // Clear cache if version doesn't match
         if (cachedVersion !== CACHE_VERSION) {
           localStorage.removeItem('employees');
           localStorage.removeItem('userData');
