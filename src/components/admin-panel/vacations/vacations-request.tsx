@@ -48,7 +48,7 @@ export default function VacationRequestsPage() {
         setRequests(
           data?.map(item => ({
             ...item,
-            employee: employees?.find(e => e.user_id == item.employee_id),
+            employee: employees?.find(e => e.id === item.employee_id),
           })) || []
         )
       } catch (error: any) {

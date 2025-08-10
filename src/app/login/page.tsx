@@ -6,14 +6,28 @@ import { SubmitButton } from '@/components/login/submit-button'
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 
-export default function LoginPage() {
+export default function LoginPage({ searchParams }: { searchParams: { email?: string; otp?: string } }) {
 
   const signIn = async (formData: FormData) => {
     "use server";
 
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
-    const supabase=createClient();
+    const supabase = createClient();
+
+    if (searchParams.otp) {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const verifyRes = await fetch(`${baseUrl}/api/otp/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code: searchParams.otp }),
+      });
+
+      if (!verifyRes.ok) {
+        return redirect("/login?message=Invalid or expired code");
+      }
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -21,6 +35,10 @@ export default function LoginPage() {
 
     if (error) {
       return redirect("/login?message=Could not authenticate user");
+    }
+
+    if (searchParams.otp) {
+      return redirect("/complete-profile");
     }
 
     return redirect("/dashboard");
@@ -38,11 +56,12 @@ export default function LoginPage() {
             <div className="grid w-full items-center gap-4 pb-3">
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  name="email" 
-                  type="email" 
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
                   placeholder="Enter your email"
+                  defaultValue={searchParams.email || ""}
                   required
                 />
               </div>

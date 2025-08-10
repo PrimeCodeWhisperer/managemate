@@ -19,6 +19,9 @@ export function AddEmployeeDialog() {
   const [showPassword, setShowPassword] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
 
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
@@ -31,6 +34,28 @@ export function AddEmployeeDialog() {
     const generated = crypto.randomUUID().replace(/-/g, "").slice(0, 12);
     setPassword(generated);
   }
+
+  const sendOtp = async () => {
+    const res = await fetch("/api/otp/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    if (res.ok) {
+      setOtpSent(true);
+    }
+  };
+
+  const verifyOtp = async () => {
+    const res = await fetch("/api/otp/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, code: otp }),
+    });
+    if (res.ok) {
+      setOtpVerified(true);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -88,7 +113,27 @@ export function AddEmployeeDialog() {
           </div>
 
           </div>
-          <Button className="w-full">Register &amp; Send email</Button>
+          {!otpSent && (
+            <Button className="w-full" onClick={sendOtp}>
+              Register &amp; Send email
+            </Button>
+          )}
+          {otpSent && !otpVerified && (
+            <div className="grid gap-2">
+              <div className="grid gap-1">
+                <Label>Verification code</Label>
+                <Input
+                  type="text"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                />
+              </div>
+              <Button className="w-full" onClick={verifyOtp}>
+                Verify OTP
+              </Button>
+            </div>
+          )}
+          {otpVerified && <p className="text-sm text-green-600">Verified!</p>}
 
         </div>
 
