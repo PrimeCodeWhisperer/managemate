@@ -28,9 +28,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "Email env vars not set." }, { status: 500 });
   }
 
-
   const supabase = createClient();
-
 
   const {
     data: { user },
@@ -54,13 +52,14 @@ export async function POST(req: NextRequest) {
     email,
     role: "employee",
   });
+  
   const otp = generateOtp();
   setOtp(email, otp, 10 * 60 * 1000);
 
   const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 587,
-    secure: true,
+    secure: false,
     auth: {
       user: GMAIL_USERNAME,
       pass: GMAIL_PASSWORD,
@@ -72,6 +71,8 @@ export async function POST(req: NextRequest) {
   const loginUrl = `${baseUrl}/login?email=${encodeURIComponent(email)}&otp=${otp}`;
 
   try {
+    await transporter.verify();
+
     await transporter.sendMail({
       from: GMAIL_USERNAME,
       to: email,
