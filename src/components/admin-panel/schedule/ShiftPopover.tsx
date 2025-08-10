@@ -29,7 +29,7 @@ const ShiftPopover: React.FC<ShiftPopoverProps> = ({
   onShiftDelete 
 }) => {
   const [start, setStart] = useState(shift.start_time);
-  const [end, setEnd] = useState(shift.end_time);
+  const [end, setEnd] = useState(shift.end_time ?? "");
 
   const handleSave = () => {
     onShiftUpdate(shift, 'start_time', start);
