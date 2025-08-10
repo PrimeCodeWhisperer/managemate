@@ -43,6 +43,7 @@ export const SupabaseDataProvider = ({ children }: { children: ReactNode }) => {
         const cachedUser = localStorage.getItem('userData');
 
         let employeesData: Employee[] | undefined;
+        let userData: User | undefined;
         if (cachedEmployees && cachedVersion === CACHE_VERSION) {
           try {
             employeesData = JSON.parse(cachedEmployees);
@@ -51,6 +52,16 @@ export const SupabaseDataProvider = ({ children }: { children: ReactNode }) => {
             console.error('Error parsing cached employees:', parseError);
             localStorage.removeItem('employees');
             employeesData = undefined;
+          }
+        }
+        if (cachedUser && cachedVersion === CACHE_VERSION) {
+          try {
+            userData=JSON.parse(cachedUser);
+            console.log('Using cached user');
+          } catch (parseError) {
+            console.error('Error parsing cached user:', parseError);
+            localStorage.removeItem('userData');
+            userData = undefined;
           }
         }
 
@@ -62,8 +73,18 @@ export const SupabaseDataProvider = ({ children }: { children: ReactNode }) => {
             localStorage.setItem('employees', JSON.stringify(employeesData));
           }
         }
+        if(!userData){
+          const currentUser=(await supabase.auth.getUser()).data.user;
+          console.log(currentUser?.id)
+          userData = await getUser(currentUser?.id);
+
+          if (userData) {
+            localStorage.setItem('userData', JSON.stringify(userData));
+          }
+        }
 
         setEmployees(employeesData);
+        setData(userData)
       } catch (err: any) {
         setError(err.message);
       } finally {

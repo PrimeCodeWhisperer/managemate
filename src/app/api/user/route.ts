@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     .select("*")
     .eq("id", id)
     .single();
-
+  console.log(data)
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
