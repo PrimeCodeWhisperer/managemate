@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
-import { createClient } from "@supabase/supabase-js";
 import { setOtp } from "@/lib/otp-store";
+import { createClient } from "@/utils/supabase/server";
 
 function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -27,28 +27,15 @@ export async function POST(req: NextRequest) {
   if (!GMAIL_USERNAME || !GMAIL_PASSWORD) {
     return NextResponse.json({ message: "Email env vars not set." }, { status: 500 });
   }
-  if (!NEXT_PUBLIC_SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    return NextResponse.json(
-      { message: "Supabase env vars not set." },
-      { status: 500 },
-    );
-  }
 
-  const supabase = createClient(
-    NEXT_PUBLIC_SUPABASE_URL,
-    SUPABASE_SERVICE_ROLE_KEY,
-    {
-      auth: { autoRefreshToken: false, persistSession: false },
-    },
-  );
+  const supabase = createClient();
 
   const {
     data: { user },
     error: createUserError,
-  } = await supabase.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
+  } = await supabase.auth.signUp({
+    email:email,
+    password:password
   });
 
   if (createUserError || !user) {
@@ -65,7 +52,7 @@ export async function POST(req: NextRequest) {
     email,
     role: "employee",
   });
-
+  
   const otp = generateOtp();
   setOtp(email, otp, 10 * 60 * 1000);
 
