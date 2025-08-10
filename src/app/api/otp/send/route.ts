@@ -53,7 +53,9 @@ export async function POST(req: NextRequest) {
 
   if (createUserError || !user) {
     return NextResponse.json(
-      { message: "Failed to create user" },
+      {
+        message: createUserError?.message || "Failed to create user",
+      },
       { status: 500 },
     );
   }
@@ -68,7 +70,9 @@ export async function POST(req: NextRequest) {
   setOtp(email, otp, 10 * 60 * 1000);
 
   const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
       user: GMAIL_USERNAME,
       pass: GMAIL_PASSWORD,
@@ -80,7 +84,6 @@ export async function POST(req: NextRequest) {
   const loginUrl = `${baseUrl}/login?email=${encodeURIComponent(email)}&otp=${otp}`;
 
   try {
-    await transporter.verify();
     await transporter.sendMail({
       from: GMAIL_USERNAME,
       to: email,
@@ -91,7 +94,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ message: "OTP sent" }, { status: 200 });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ message: "Failed to send OTP" }, { status: 500 });
+    console.error("Failed to send OTP", error);
+    const message = error instanceof Error ? error.message : "Failed to send OTP";
+    return NextResponse.json({ message }, { status: 500 });
   }
 }
