@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/utils/supabase/client'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Loader2, Trash2 } from "lucide-react"
@@ -20,7 +19,6 @@ export default function ProfilesPage() {
   const [profiles, setProfiles] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const supabase = createClient()
 
   useEffect(() => {
     const fetchProfiles = () => {
@@ -42,13 +40,18 @@ export default function ProfilesPage() {
     if (!confirm('Are you sure you want to delete this user?')) return
 
     try {
-      const { error } = await supabase.auth.admin.deleteUser(id)
+      const res = await fetch(`/api/users/${id}/delete`, { method: 'DELETE' })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setError('Error deleting profile: ' + (data.error || res.statusText))
+        return
+      }
 
       const updatedProfiles = profiles.filter(profile => profile.id !== id)
       setProfiles(updatedProfiles)
 
       const cachedEmployees = localStorage.getItem('employees')
-      
+
       if (cachedEmployees) {
         const updatedEmployees = await fetchEmployees();
         localStorage.setItem('employees', JSON.stringify(updatedEmployees))
