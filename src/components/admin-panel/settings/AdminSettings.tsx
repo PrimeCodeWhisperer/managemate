@@ -14,6 +14,7 @@ import {
 import { Clock, Building2, Bell, Trash2 } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
 import { TimeSpan } from "@/lib/definitions";
+import { toast } from "sonner";
 
 const AdminSettings = () => {
   const { timeSpans, addTimeSpan, updateTimeSpan, removeTimeSpan, saveChanges } = useSettings();
@@ -213,7 +214,10 @@ const AdminSettings = () => {
 
       {/* Save Changes */}
       <div className="flex justify-end">
-        <Button className="px-6" onClick={saveChanges}>
+        <Button className="px-6" onClick={()=>{
+          saveChanges();
+          toast("Settings changes saved correctly!")
+          }}>
           Save Changes
         </Button>
       </div>

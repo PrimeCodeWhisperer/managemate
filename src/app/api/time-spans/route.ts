@@ -38,6 +38,10 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   const supabase = createClient();
   const body = await request.json();
+  const id = Number(body.id);
+  if (!Number.isInteger(id)) {
+    return NextResponse.json({ error: "Valid id is required" }, { status: 400 });
+  }
   const { data, error } = await supabase
     .from("time_spans")
     .update({
@@ -45,12 +49,14 @@ export async function PUT(request: Request) {
       start_time: body.start_time,
       end_time: body.end_time,
     })
-    .eq("id", body.id)
-    .select()
-    .single();
+    .eq("id", id)
+    .select();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  if (!data) {
+    return NextResponse.json({ error: "Time span not found" }, { status: 404 });
   }
 
   return NextResponse.json(data);
@@ -59,14 +65,35 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   const supabase = createClient();
   const body = await request.json();
-  const { error } = await supabase
+  const id = Number(body.id);
+  if (!Number.isInteger(id)) {
+    return NextResponse.json({ error: "Valid id is required" }, { status: 400 });
+  }
+
+  const { data: existingRecord } = await supabase
+    .from("time_spans")
+    .select("id")
+    .eq("id", id)
+    .single();
+
+  if (!existingRecord) {
+    return NextResponse.json({ error: "Time span not found" }, { status: 404 });
+  }
+  console.log('DELETE - Found existing record:', existingRecord);
+
+  const { data, error, count } = await supabase
     .from("time_spans")
     .delete()
-    .eq("id", body.id);
+    .eq("id", id)
+    .select(); // Add select to see what was deleted
+
+  console.log('DELETE - Result data:', data);
+  console.log('DELETE - Result error:', error);
+  console.log('DELETE - Result count:', count);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ id: body.id });
+  return NextResponse.json({ success: true, id });
 }

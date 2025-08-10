@@ -3,6 +3,7 @@ import { SupabaseDataProvider } from "@/contexts/SupabaseContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
+import { Toaster } from "sonner";
 
 export default async function DemoLayout({
   children
@@ -18,6 +19,7 @@ export default async function DemoLayout({
   <SupabaseDataProvider>
     <SettingsProvider>
       <AdminPanelLayout>{children}</AdminPanelLayout>
+      <Toaster/>
     </SettingsProvider>
   </SupabaseDataProvider>
   );
