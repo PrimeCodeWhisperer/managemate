@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { createClient } from '../utils/supabase/client';
 import { Employee, User } from '@/lib/definitions';
 import { fetchEmployees, getUser } from '@/utils/api';
+import { clearAppCache } from '@/utils/localStorage';
 
 const supabase = createClient();
 
@@ -12,6 +13,7 @@ interface SupabaseDataContextType {
   employees: Employee[] | undefined;
   loading: boolean;
   error: string | null;
+  clearCache:()=>void;
 }
 
 // Create the context
@@ -23,6 +25,12 @@ export const SupabaseDataProvider = ({ children }: { children: ReactNode }) => {
   const [employees, setEmployees] = useState<Employee[] | undefined>();
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const clearCache = () => {
+    clearAppCache();
+    // Reset state to undefined to trigger fresh fetch
+    setEmployees(undefined);
+    setData(undefined);;
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -98,7 +106,7 @@ export const SupabaseDataProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <SupabaseDataContext.Provider value={{ data, employees, loading, error }}>
+    <SupabaseDataContext.Provider value={{ data, employees, loading, error,clearCache }}>
       {children}
     </SupabaseDataContext.Provider>
   );

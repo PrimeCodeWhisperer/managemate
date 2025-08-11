@@ -5,10 +5,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { SubmitButton } from '@/components/login/submit-button'
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
-import { getUser } from '@/utils/api'
-import { User } from '@/lib/definitions'
 
-export default function LoginPage() {
+export default function LoginPage({ searchParams }: { searchParams: { email?: string;} }) {
 
   const signIn = async (formData: FormData) => {
     "use server";
@@ -17,17 +15,24 @@ export default function LoginPage() {
     const password = formData.get("password") as string;
     const supabase = createClient();
 
-    const {data, error } = await supabase.auth.signInWithPassword({
+
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    const data= (await supabase.auth.getUser()).data
     const user= await supabase.from("profiles").select("*").eq("id",data.user?.id).single()
+    console.log(data)
     if (error) {
       return redirect("/login?message=Could not authenticate user");
     }
-    if(user.data.role==="admin"){
+    if(user.data.role==="admin" && user.data.role!=""){
       return redirect("/dashboard");
     }
+    if (searchParams.email) {
+      return redirect("/complete-profile");
+    }
+
   };
 
   return (
@@ -47,6 +52,7 @@ export default function LoginPage() {
                   name="email"
                   type="email"
                   placeholder="Enter your email"
+                  defaultValue={searchParams.email || ""}
                   required
                 />
               </div>

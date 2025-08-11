@@ -1,25 +1,30 @@
 'use client'
 
 import { createClient } from '@/utils/supabase/client'
-import { useRouter } from 'next/navigation'
+import { redirect, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { clearCacheAndLogout } from '@/utils/localStorage'
 export default function LogoutButton({isOpen}:{isOpen?:boolean}) {
   const router = useRouter()
   const supabase = createClient()
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut()
-      if (error) {
-        throw error
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include', // Include cookies
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to logout');
       }
-      router.push('/') // Redirect to home page after logout
-      router.refresh() // Refresh the current route
 
-      //router.refresh() doesn't work, i try to fix it with this:
+      // Clear localStorage and redirect
+      clearCacheAndLogout();
 
-      //window.location.reload()
+      redirect("/")
     } catch (error) {
       console.error('Error logging out:', error)
     } finally {

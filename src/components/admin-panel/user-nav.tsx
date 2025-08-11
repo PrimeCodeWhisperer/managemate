@@ -23,29 +23,33 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSupabaseData } from "@/contexts/SupabaseContext";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/utils/supabase/client";
+import { clearCacheAndLogout } from '@/utils/localStorage'; // Import the utility we created
 
 export function UserNav() {
-  const {data}=useSupabaseData();
-  const router = useRouter()
-    const supabase = createClient()
-    const handleLogout = async () => {
-      try {
-        const { error } = await supabase.auth.signOut()
-        if (error) {
-          throw error
-        }
-        router.push('/') // Redirect to home page after logout
-        router.refresh() // Refresh the current route
+  const { data } = useSupabaseData();
+  const router = useRouter();
 
-        //router.refresh() doesn't work, i try to fix it with this:
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include', // Include cookies
+      });
 
-        //window.location.reload()
-      } catch (error) {
-        console.error('Error logging out:', error)
-      } finally {
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to logout');
       }
+
+      // Clear localStorage and redirect
+      clearCacheAndLogout();
+      
+    } catch (error) {
+      console.error('Error logging out:', error);
+      // Fallback: still clear cache and redirect even if API fails
+      clearCacheAndLogout();
     }
+  };
   return (
     <DropdownMenu>
       <TooltipProvider disableHoverableContent>

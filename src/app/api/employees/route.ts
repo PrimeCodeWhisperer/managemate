@@ -16,7 +16,6 @@ export async function GET() {
     console.error('Supabase error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-
   if (!data || data.length === 0) {
     console.log('No employees found');
     return NextResponse.json([]);
@@ -37,5 +36,28 @@ export async function GET() {
   } catch (mappingError) {
     console.error('Error mapping employees:', mappingError);
     return NextResponse.json({ error: 'Error processing employee data' }, { status: 500 });
+  }
+}
+export async function DELETE(request: Request) {
+  const body = await request.json();
+  const id = body.id;
+
+  if (!id) {
+    return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+  }
+
+    const supabase = createClient();
+
+
+  try {
+    const { error } = await supabase.auth.admin.deleteUser(id);
+    
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

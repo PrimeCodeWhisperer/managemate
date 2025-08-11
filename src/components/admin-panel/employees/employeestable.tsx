@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Loader2, Trash2 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Avatar,AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { EmployeeInfoDialog } from './employee-info-dialog'
 import { fetchEmployees } from '@/utils/api'
 import { AddEmployeeDialog } from "./add-employee-dialog"
@@ -16,7 +16,7 @@ import { useSupabaseData } from '@/contexts/SupabaseContext'
 
 
 export default function ProfilesPage() {
-  const {employees}=useSupabaseData()
+  const { employees } = useSupabaseData()
   const [profiles, setProfiles] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -25,8 +25,8 @@ export default function ProfilesPage() {
   useEffect(() => {
     const fetchProfiles = () => {
       try {
-        if(employees){
-          setProfiles(employees||[])
+        if (employees) {
+          setProfiles(employees || [])
         }
 
       } catch (error: any) {
@@ -42,17 +42,23 @@ export default function ProfilesPage() {
     if (!confirm('Are you sure you want to delete this user?')) return
 
     try {
-      const { error } = await supabase.auth.admin.deleteUser(id)
-      console.log(error?.message)
-      const updatedProfiles = profiles.filter(profile => profile.id !== id)
-      setProfiles(updatedProfiles)
+      const response = await fetch(`/api/employees`, {
+        method: 'DELETE',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
 
-      const cachedEmployees = localStorage.getItem('employees')
-      
-      if (cachedEmployees) {
-        const updatedEmployees = await fetchEmployees();
-        localStorage.setItem('employees', JSON.stringify(updatedEmployees))
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete user');
       }
+
+      const updatedProfiles = profiles.filter(profile => profile.id !== id);
+      setProfiles(updatedProfiles);
+
+      // Update cache
+      const updatedEmployees = await fetchEmployees();
+      localStorage.setItem('employees', JSON.stringify(updatedEmployees));
     } catch (error: any) {
       setError('Error deleting profile: ' + error.message)
     }
@@ -77,47 +83,47 @@ export default function ProfilesPage() {
 
   return (
     <Card className="rounded-lg border-none mt-6">
-        <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle >Employees list</CardTitle>
-            <AddEmployeeDialog />
-        </CardHeader>
-        <CardContent>
-            <Table>
-            <TableHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle >Employees list</CardTitle>
+        <AddEmployeeDialog />
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
             <TableRow>
-                <TableHead></TableHead>
-                <TableHead>Username</TableHead>
-                <TableHead>Full Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Actions</TableHead>
+              <TableHead></TableHead>
+              <TableHead>Username</TableHead>
+              <TableHead>Full Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
-            </TableHeader>
-            <TableBody>
+          </TableHeader>
+          <TableBody>
             {profiles.map((profile) => {
-                return(
+              return (
                 <TableRow key={profile.id}>
-                <TableCell>
-                <Avatar className="h-8 w-8 bg-secondary">
-                  <AvatarImage src="#" alt="Avatar" />
-                  <AvatarFallback className="bg-transparent">{`${profile.first_name[0]}${profile.last_name[0]}`}</AvatarFallback>
-                </Avatar>
-                </TableCell>
-                <TableCell>{profile.username}</TableCell>
-                <TableCell>{`${profile.first_name} ${profile.last_name}`}</TableCell>
-                <TableCell>{profile.email}</TableCell>
-                <TableCell className="flex gap-2">
-                    <EmployeeInfoDialog employee={profile}/>
+                  <TableCell>
+                    <Avatar className="h-8 w-8 bg-secondary">
+                      <AvatarImage src="#" alt="Avatar" />
+                      <AvatarFallback className="bg-transparent">{`${profile.first_name[0]}${profile.last_name[0]}`}</AvatarFallback>
+                    </Avatar>
+                  </TableCell>
+                  <TableCell>{profile.username}</TableCell>
+                  <TableCell>{`${profile.first_name} ${profile.last_name}`}</TableCell>
+                  <TableCell>{profile.email}</TableCell>
+                  <TableCell className="flex gap-2">
+                    <EmployeeInfoDialog employee={profile} />
                     <Button variant="destructive" size="sm" onClick={() => handleDelete(profile.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                </TableCell>
+                  </TableCell>
                 </TableRow>
-                );
+              );
             })}
-            </TableBody>
+          </TableBody>
         </Table>
-        </CardContent>
-      
+      </CardContent>
+
     </Card>
   )
 }

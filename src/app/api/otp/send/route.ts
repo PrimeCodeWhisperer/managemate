@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
-import { setOtp } from "@/lib/otp-store";
 import { createClient } from "@/utils/supabase/server";
 
-function generateOtp() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
 
 export async function POST(req: NextRequest) {
   const { email, password } = await req.json();
@@ -31,11 +27,15 @@ export async function POST(req: NextRequest) {
   const {
     data: { user },
     error: createUserError,
-  } = await supabase.auth.signUp({
+  } = await supabase.auth.admin.createUser({
     email:email,
     password:password
   });
- console.log("created")
+  
+  if(user){
+    const{error}=await supabase.from("profiles").update({role:"employee"}).eq("id",user.id)
+    console.log(error)
+  }
 
   if (createUserError || !user) {
     return NextResponse.json(
@@ -47,9 +47,6 @@ export async function POST(req: NextRequest) {
   }
 
   
-  const otp = generateOtp();
-  setOtp(email, otp, 10 * 60 * 1000);
-
   const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 587,
@@ -61,7 +58,7 @@ export async function POST(req: NextRequest) {
   });
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const loginUrl = `${baseUrl}/login?email=${encodeURIComponent(email)}&otp=${otp}`;
+  const loginUrl = `${baseUrl}/login?complete=${user.email}`;
 
   try {
     await transporter.verify();
