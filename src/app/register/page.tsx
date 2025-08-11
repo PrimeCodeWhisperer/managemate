@@ -47,7 +47,7 @@ export default function RegisterPage({ searchParams }: { searchParams: { message
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex items-center justify-center min-h-screen bg-background dark:bg-background">
       <Card className="w-[350px]">
         <CardHeader>
           <CardTitle>Register</CardTitle>
