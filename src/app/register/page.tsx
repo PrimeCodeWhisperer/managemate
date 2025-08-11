@@ -6,7 +6,7 @@ import { SubmitButton } from '@/components/login/submit-button'
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 
-export default function RegisterPage() {
+export default function RegisterPage({ searchParams }: { searchParams: { message?: string } }) {
 
   const signUp = async (formData: FormData) => {
     "use server";
@@ -54,6 +54,14 @@ export default function RegisterPage() {
           <CardDescription>Create a new employee account</CardDescription>
         </CardHeader>
         <CardContent>
+          {searchParams.message && (
+            <div
+              className="mb-4 rounded border border-red-300 bg-red-100 p-2 text-red-700"
+              role="alert"
+            >
+              {searchParams.message}
+            </div>
+          )}
           <form>
             <div className="grid w-full items-center gap-4 pb-3">
               <div className="flex flex-col space-y-1.5">
