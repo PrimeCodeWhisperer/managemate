@@ -39,7 +39,7 @@ export default function LoginPage({ searchParams }: { searchParams: { email?: st
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background dark:bg-background">
-      <Card className="w-[350px]">
+      <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Login</CardTitle>
           <CardDescription>Enter your credentials to access your account</CardDescription>
