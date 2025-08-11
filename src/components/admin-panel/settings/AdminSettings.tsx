@@ -41,53 +41,7 @@ const AdminSettings = () => {
 
   return (
     <div className="py-6 space-y-6  mx-auto">
-      {/* Business Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="w-5 h-5" />
-            Business Settings
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Business Name</label>
-              <Input
-                value={businessSettings.businessName}
-                onChange={(e) =>
-                  setBusinessSettings({
-                    ...businessSettings,
-                    businessName: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Timezone</label>
-              <Select
-                value={businessSettings.timezone}
-                onValueChange={(value) =>
-                  setBusinessSettings({
-                    ...businessSettings,
-                    timezone: value,
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select timezone" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="UTC-5">Eastern Time (UTC-5)</SelectItem>
-                  <SelectItem value="UTC-6">Central Time (UTC-6)</SelectItem>
-                  <SelectItem value="UTC-7">Mountain Time (UTC-7)</SelectItem>
-                  <SelectItem value="UTC-8">Pacific Time (UTC-8)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      
 
       {/* Time Spans */}
       <Card>
@@ -169,28 +123,11 @@ const AdminSettings = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bell className="w-5 h-5" />
-            Notification Settings
+            Advanced Settings
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium">Enable Notifications</h3>
-                <p className="text-sm text-gray-500">
-                  Receive alerts for schedule changes and requests
-                </p>
-              </div>
-              <Switch
-                checked={businessSettings.enableNotifications}
-                onCheckedChange={(checked) =>
-                  setBusinessSettings({
-                    ...businessSettings,
-                    enableNotifications: checked,
-                  })
-                }
-              />
-            </div>
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-medium">Auto-Schedule</h3>
