@@ -4,7 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 
 
 export async function POST(req: NextRequest) {
-  const { email, password } = await req.json();
+  const { username,email, password } = await req.json();
 
   if (!email || !password) {
     return NextResponse.json(
@@ -29,12 +29,14 @@ export async function POST(req: NextRequest) {
     error: createUserError,
   } = await supabase.auth.admin.createUser({
     email:email,
-    password:password
+    password:password,
+    email_confirm:true
   });
   
   if(user){
-    const{error}=await supabase.from("profiles").update({role:"employee"}).eq("id",user.id)
-    console.log(error)
+    const{data,error}=await supabase.from("employees").update({username:username,role:"pending"}).eq("id",user.id).select().single()
+
+    console.log(data)
   }
 
   if (createUserError || !user) {
@@ -58,7 +60,7 @@ export async function POST(req: NextRequest) {
   });
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const loginUrl = `${baseUrl}/login?complete=${user.email}`;
+  const loginUrl = `${baseUrl}/login?email=${user.email}`;
 
   try {
     await transporter.verify();

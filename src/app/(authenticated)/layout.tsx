@@ -1,9 +1,10 @@
 import AdminPanelLayout from "@/components/admin-panel/admin-panel-layout";
-import { SupabaseDataProvider } from "@/contexts/SupabaseContext";
+import { SupabaseDataProvider, useSupabaseData } from "@/contexts/SupabaseContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { Toaster } from "sonner";
+import { getUser } from "@/utils/api";
 
 export default async function DemoLayout({
   children
@@ -12,8 +13,12 @@ export default async function DemoLayout({
 }) {
   const supabase=createClient();
   const { data: { session } } = await supabase.auth.getSession()
+  const user=(await supabase.auth.getUser()).data.user
     if(!session){
         redirect('login')
+    }
+    if(user){
+      console.log("User",user)
     }
   return(
   <SupabaseDataProvider>

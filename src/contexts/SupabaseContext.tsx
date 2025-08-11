@@ -87,11 +87,14 @@ export const SupabaseDataProvider = ({ children }: { children: ReactNode }) => {
           console.log(currentUser?.id)
           userData = await getUser(currentUser?.id);
           console.log(userData)
-
           if (userData) {
             localStorage.setItem('userData', JSON.stringify(userData));
           }
         }
+          if(userData?.role!=="admin"){
+            localStorage.clear()
+            supabase.auth.signOut()
+          }
 
         setEmployees(employeesData);
         setData(userData)

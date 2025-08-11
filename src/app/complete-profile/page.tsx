@@ -4,14 +4,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { SubmitButton } from "@/components/login/submit-button";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
+import { handleLogout } from "@/utils/api";
 
 export default function CompleteProfilePage() {
+
   const updateProfile = async (formData: FormData) => {
     "use server";
 
-    const username = formData.get("username") as string;
     const firstName = formData.get("first_name") as string;
     const lastName = formData.get("last_name") as string;
+    const password = formData.get("password") as string;
 
     const supabase = createClient();
     const {
@@ -24,15 +26,19 @@ export default function CompleteProfilePage() {
 
     await supabase.from("profiles").upsert({
       id: user.id,
-      username,
       first_name: firstName,
       last_name: lastName,
       email: user.email,
       role: "employee",
     });
 
-    return redirect("/dashboard");
+    await supabase.auth.updateUser({
+      password:password
+    })
+    await supabase.auth.signOut()
+    return redirect("/get-app");
   };
+  
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -45,16 +51,16 @@ export default function CompleteProfilePage() {
           <form>
             <div className="grid w-full items-center gap-4 pb-3">
               <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="username">Username</Label>
-                <Input id="username" name="username" placeholder="Enter a username" required />
-              </div>
-              <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="first_name">First Name</Label>
                 <Input id="first_name" name="first_name" placeholder="Enter your first name" required />
               </div>
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="last_name">Last Name</Label>
                 <Input id="last_name" name="last_name" placeholder="Enter your last name" required />
+              </div>
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="password">New password</Label>
+                <Input id="password" name="password" type="password" placeholder="Enter your new password" required />
               </div>
             </div>
             <SubmitButton formAction={updateProfile} pendingText="Saving...">

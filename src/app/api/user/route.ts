@@ -5,7 +5,7 @@ import { User } from "@/lib/definitions";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
-
+  
   if (!id) {
     return NextResponse.json({ error: "Missing id" }, { status: 400 });
   }
@@ -16,7 +16,6 @@ export async function GET(request: Request) {
     .select("*")
     .eq("id", id)
     .single();
-  console.log(data)
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

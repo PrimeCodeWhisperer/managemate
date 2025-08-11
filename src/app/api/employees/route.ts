@@ -61,3 +61,28 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+export async function PUT(request: Request) {
+  const supabase = createClient();
+  const body = await request.json();
+  const id = Number(body.id);
+  if (!Number.isInteger(id)) {
+    return NextResponse.json({ error: "Valid id is required" }, { status: 400 });
+  }
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({
+      username: body.username,
+      role: body.role,
+    })
+    .eq("id", id)
+    .select();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  if (!data) {
+    return NextResponse.json({ error: "Time span not found" }, { status: 404 });
+  }
+
+  return NextResponse.json(data);
+}

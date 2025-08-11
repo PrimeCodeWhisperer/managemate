@@ -22,16 +22,18 @@ export default function LoginPage({ searchParams }: { searchParams: { email?: st
     });
     const data= (await supabase.auth.getUser()).data
     const user= await supabase.from("profiles").select("*").eq("id",data.user?.id).single()
-    console.log(data)
+
     if (error) {
       return redirect("/login?message=Could not authenticate user");
     }
-    if(user.data.role==="admin" && user.data.role!=""){
+    if(user.data.role==="admin" && user.data.role!==""){
       return redirect("/dashboard");
     }
-    if (searchParams.email) {
+    if (user.data.role==="pending") {
       return redirect("/complete-profile");
     }
+    await supabase.auth.signOut()
+    return redirect("/")
 
   };
 

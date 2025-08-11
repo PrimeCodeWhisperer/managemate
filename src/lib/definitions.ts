@@ -43,6 +43,12 @@ export type Employee={
     last_name:string;
     name?:string;
 }
+// Pending employees awaiting approval/activation
+export type PendingEmployee = {
+    id: string;
+    email: string;
+    username?: string
+};
 export type Availability= {
     week_start: string;
     availability: {
