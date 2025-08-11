@@ -1,6 +1,4 @@
 'use client'
-import { CalendarIcon, Settings, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Calendar from "./cal";
 import ShiftsCard from "./shifts-card";
@@ -21,8 +19,8 @@ export default function DashboardContent(){
     return(
         <main className="flex-1 overflow-y-auto">
         <div className="max-w-7xl mx-auto py-6 ">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="col-span-1 md:col-span-2 lg:col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="col-span-1 md:col-span-2">
               <CardHeader>
                 <CardTitle>Shift Calendar</CardTitle>
                 <CardDescription>View and manage your shifts</CardDescription>
@@ -35,7 +33,7 @@ export default function DashboardContent(){
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="md:col-start-2">
               <CardHeader>
                 <CardTitle>Upcoming Shifts</CardTitle>
                 <CardDescription>Your next 3 scheduled shifts</CardDescription>
@@ -61,24 +59,6 @@ export default function DashboardContent(){
                     ))}
                   </TableBody>
                 </Table>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>Manage your account and shifts</CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col space-y-2">
-                <Button className="w-full justify-start">
-                  <CalendarIcon className="mr-2 h-4 w-4" /> Request Time Off
-                </Button>
-                <Button className="w-full justify-start">
-                  <User className="mr-2 h-4 w-4" /> View Profile
-                </Button>
-                <Button className="w-full justify-start">
-                  <Settings className="mr-2 h-4 w-4" /> Account Settings
-                </Button>
               </CardContent>
             </Card>
           </div>
