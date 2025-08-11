@@ -6,7 +6,7 @@ import { SubmitButton } from '@/components/login/submit-button'
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 
-export default function LoginPage({ searchParams }: { searchParams: { email?: string;} }) {
+export default function LoginPage({ searchParams }: { searchParams: { email?: string; message?: string } }) {
 
   const signIn = async (formData: FormData) => {
     "use server";
@@ -45,6 +45,14 @@ export default function LoginPage({ searchParams }: { searchParams: { email?: st
           <CardDescription>Enter your credentials to access your account</CardDescription>
         </CardHeader>
         <CardContent>
+          {searchParams.message && (
+            <div
+              className="mb-4 rounded border border-red-300 bg-red-100 p-2 text-red-700"
+              role="alert"
+            >
+              {searchParams.message}
+            </div>
+          )}
           <form>
             <div className="grid w-full items-center gap-4 pb-3">
               <div className="flex flex-col space-y-1.5">
