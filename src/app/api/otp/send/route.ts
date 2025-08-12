@@ -30,15 +30,11 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.admin.createUser({
     email:email,
     password:password,
-    email_confirm:true
+    email_confirm:true,
+    user_metadata:{username:username}
   });
   
-  if(user){
-    const{data,error}=await supabase.from("employees").update({username:username,role:"pending"}).eq("id",user.id).select().single()
-
-    console.log(data)
-  }
-
+  
   if (createUserError || !user) {
     return NextResponse.json(
       {
