@@ -14,6 +14,7 @@ import ShiftsCard from "./shifts-card";
 import { Table,TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import OpenShiftsCard from "./OpenShiftsCard";
+import PendingEmployeesCard from "./PendingEmployeesCard";
 
 
 const supabase = createClient()
@@ -105,6 +106,7 @@ export default function DashboardContent() {
             </CardContent>
           </Card>
           <OpenShiftsCard />
+          <PendingEmployeesCard />
         </div>
       </div>
     </main>
