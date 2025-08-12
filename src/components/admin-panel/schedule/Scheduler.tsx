@@ -15,6 +15,7 @@ import EditShiftDialog from './EditShiftDialog';
 import InfoShiftDialog from './InfoShiftDialog';
 import { useSupabaseData } from '@/contexts/SupabaseContext';
 import { useSettings } from '@/contexts/SettingsContext';
+import { toast } from 'sonner';
 
 interface Availability {
   week_start: string;
@@ -54,6 +55,7 @@ export default function Component(props: SchedulerProps) {
   }
 
   const handleSaveCustomShift = (shift: { user_id: string; start_time: string ;open_shift:boolean}) => {
+    
     if (selectedDate) {
       let newShift: Shift;
       if(shift.open_shift==true){
@@ -70,7 +72,12 @@ export default function Component(props: SchedulerProps) {
           status:'unplanned'
           }
       }
-      setDraftShifts(prevShifts => [...prevShifts, newShift]);
+      if(newShift.start_time<timeSpans[0].start_time || (newShift.end_time?(newShift.end_time>timeSpans[timeSpans.length-1].end_time):false)){
+        toast("Shift out of timespan")
+      }else{
+
+      }
+      console.log(draft_shifts)
     }
   };
   const handleShiftDelete = (shiftToDelete: Shift) => {
@@ -150,6 +157,7 @@ export default function Component(props: SchedulerProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[employees, props.shifts]);
   const renderWeekSchedule = () => {
+    console.log(draft_shifts)
     return (
       <Card >
         <CardContent className="p-0">
@@ -179,13 +187,11 @@ export default function Component(props: SchedulerProps) {
                       end: parseISO(`2000-01-01T${span.end_time}`)
                     })
                   );
-
                   return (
                     <div key={`${format(day, 'yyyy-MM-dd')}-${span.id}`} className="bg-background p-2 min-h-[120px] w-full">
                       {filteredShifts?.sort(function(a,b){return a.start_time.localeCompare(b.start_time)}).map((shift, index) => {
                         const employee = employees?.find(emp => emp.id === shift.user_id);
                         const startTime = parseISO(`2000-01-01T${shift.start_time}`);
-
                         return (
                           <DropdownMenu key={`${shift.user_id}-${dayIndex}-${span.id}-${index}`} >
                             <DropdownMenuTrigger asChild className='w-full'>
