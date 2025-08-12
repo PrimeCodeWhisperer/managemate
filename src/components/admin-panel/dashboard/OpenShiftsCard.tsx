@@ -35,7 +35,7 @@ export default function OpenShiftsCard() {
         <CardTitle>Open Shifts</CardTitle>
         <CardDescription>Unassigned shifts this week</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 max-h-45 overflow-scroll">
         {sortedDates.length ? (
           sortedDates.map((date) => (
             <div key={date} className="space-y-2">

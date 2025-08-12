@@ -82,10 +82,10 @@ export default function DashboardContent() {
             </CardContent>
           </Card>
 
-          <ScheduleProgressCard />
           <VacationRequestsCard />
           <OpenShiftsCard />
-          <PendingEmployeesCard />
+          <ScheduleProgressCard />
+          {/*<PendingEmployeesCard />*/}
         </div>
       </div>
     </main>

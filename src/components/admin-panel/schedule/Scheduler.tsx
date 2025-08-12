@@ -72,10 +72,11 @@ export default function Component(props: SchedulerProps) {
           status:'unplanned'
           }
       }
+      console.log(newShift)
       if(newShift.start_time<timeSpans[0].start_time || (newShift.end_time?(newShift.end_time>timeSpans[timeSpans.length-1].end_time):false)){
         toast("Shift out of timespan")
       }else{
-
+        setDraftShifts((shifts)=>[...shifts,newShift])
       }
       console.log(draft_shifts)
     }
