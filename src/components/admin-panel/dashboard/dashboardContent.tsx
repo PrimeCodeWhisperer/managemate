@@ -64,23 +64,6 @@ export default function DashboardContent(){
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>Manage your account and shifts</CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col space-y-2">
-                <Button className="w-full justify-start">
-                  <CalendarIcon className="mr-2 h-4 w-4" /> Request Time Off
-                </Button>
-                <Button className="w-full justify-start">
-                  <User className="mr-2 h-4 w-4" /> View Profile
-                </Button>
-                <Button className="w-full justify-start">
-                  <Settings className="mr-2 h-4 w-4" /> Account Settings
-                </Button>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </main>
