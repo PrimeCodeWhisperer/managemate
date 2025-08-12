@@ -1,12 +1,11 @@
 'use client'
-import { CalendarIcon, Settings, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Calendar from "./cal";
 import ShiftsCard from "./shifts-card";
 import { Table,TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
+import OpenShiftsCard from "./OpenShiftsCard";
 
 export default function DashboardContent(){
     const [selectedDate,setSelectedDate]=useState<null|Date>(new Date);
@@ -64,6 +63,7 @@ export default function DashboardContent(){
               </CardContent>
             </Card>
 
+            <OpenShiftsCard />
           </div>
         </div>
       </main>
