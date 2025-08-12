@@ -4,11 +4,17 @@ import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { User, CalendarIcon, Plane } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent,CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useSupabaseData } from '@/contexts/SupabaseContext'
 import { fetchPendingEmployees } from '@/utils/api'
 import { fetchOpenShifts } from '@/utils/supabaseClient'
 import { createClient } from '@/utils/supabase/client'
+import Calendar from "./cal";
+import ShiftsCard from "./shifts-card";
+import { Table,TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import OpenShiftsCard from "./OpenShiftsCard";
+
 
 const supabase = createClient()
 
@@ -98,6 +104,7 @@ export default function DashboardContent() {
               </Button>
             </CardContent>
           </Card>
+          <OpenShiftsCard />
         </div>
       </div>
     </main>
