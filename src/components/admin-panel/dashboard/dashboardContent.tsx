@@ -10,6 +10,7 @@ import { fetchPendingEmployees } from '@/utils/api'
 import { fetchOpenShifts } from '@/utils/supabaseClient'
 import { createClient } from '@/utils/supabase/client'
 import OpenShiftsCard from "./OpenShiftsCard";
+import PendingEmployeesCard from "./PendingEmployeesCard";
 import VacationRequestsCard from "./VacationRequestsCard";
 import ScheduleProgressCard from "./ScheduleProgressCard";
 
@@ -84,6 +85,7 @@ export default function DashboardContent() {
           <ScheduleProgressCard />
           <VacationRequestsCard />
           <OpenShiftsCard />
+          <PendingEmployeesCard />
         </div>
       </div>
     </main>
