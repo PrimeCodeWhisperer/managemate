@@ -13,12 +13,8 @@ export default async function DemoLayout({
 }) {
   const supabase=createClient();
   const { data: { session } } = await supabase.auth.getSession()
-  const user=(await supabase.auth.getUser()).data.user
     if(!session){
         redirect('login')
-    }
-    if(user){
-      console.log("User",user)
     }
   return(
   <SupabaseDataProvider>
