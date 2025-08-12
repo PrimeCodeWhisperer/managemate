@@ -76,7 +76,7 @@ export default function Component(props: SchedulerProps) {
   const handleShiftDelete = (shiftToDelete: Shift) => {
     setDraftShifts(prevShifts => 
       prevShifts.filter(shift => 
-        !(shift.user_id === shiftToDelete.user_id && isSameDay(shift.date, shiftToDelete.date))
+        !(shift.user_id === shiftToDelete.user_id && shift.start_time== shiftToDelete.start_time&& isSameDay(shift.date, shiftToDelete.date))
       )
     );
   };
@@ -213,7 +213,15 @@ export default function Component(props: SchedulerProps) {
                                 </>
                               ):(
                                 <>
-                                  <DropdownMenuItem onClick={()=>{setSelectedShift(shift),handleShiftDelete(shift)}}>Edit</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={()=>{
+                                    setSelectedShift(shift);
+                                    handleShiftDelete(shift)
+                                    // Delay to ensure dropdown closes and cleans up before dialog opens
+                                    setTimeout(() => {
+                                      setIsEditShiftDialogOpen(true);
+                                    }, 100);
+
+                                    }}>Edit</DropdownMenuItem>
                                   <DropdownMenuItem onClick={()=>handleShiftDelete(shift)}>Delete</DropdownMenuItem>
                                 </>
                               )}
