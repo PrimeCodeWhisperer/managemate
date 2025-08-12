@@ -11,6 +11,7 @@ import { fetchOpenShifts } from '@/utils/supabaseClient'
 import { createClient } from '@/utils/supabase/client'
 import OpenShiftsCard from "./OpenShiftsCard";
 import VacationRequestsCard from "./VacationRequestsCard";
+import ScheduleProgressCard from "./ScheduleProgressCard";
 
 
 const supabase = createClient()
@@ -80,6 +81,7 @@ export default function DashboardContent() {
             </CardContent>
           </Card>
 
+          <ScheduleProgressCard />
           <VacationRequestsCard />
           <OpenShiftsCard />
         </div>
