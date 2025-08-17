@@ -6,6 +6,7 @@ import { SubmitButton } from '@/components/login/submit-button'
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 
+
 export default function LoginPage({ searchParams }: { searchParams: { email?: string; message?: string } }) {
 
   const signIn = async (formData: FormData) => {
