@@ -2,12 +2,19 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { Employee } from "@/lib/definitions";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const companyId = searchParams.get('companyId');
+  if (!companyId) {
+    return NextResponse.json({ error: 'Missing companyId' }, { status: 400 });
+  }
+
   const supabase = createClient();
   const { data, error } = await supabase
     .from("profiles")
     .select("*")
-    .eq("role", "employee");
+    .eq("role", "employee")
+    .eq("company_id", companyId);
 
   console.log('Raw data from Supabase:', data);
   console.log('Error from Supabase:', error);
