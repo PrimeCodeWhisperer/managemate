@@ -41,7 +41,8 @@ export type Employee={
     username:string;
     first_name:string;
     last_name:string;
-    name?:string;
+    company_id?:string;
+
 }
 // Pending employees awaiting approval/activation
 export type PendingEmployee = {
