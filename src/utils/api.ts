@@ -17,12 +17,14 @@ export const getUser = (id?: string) => {
   return fetcher<User>(`/api/user?id=${id}`);
 };
 
-export const fetchEmployees = () => {
-  return fetcher<Employee[]>("/api/employees");
+export const fetchEmployees = (companyId?: string) => {
+  const url = companyId ? `/api/employees?companyId=${companyId}` : "/api/employees";
+  return fetcher<Employee[]>(url);
 };
 
-export const fetchPendingEmployees = () => {
-  return fetcher<PendingEmployee[]>("/api/pending-employees");
+export const fetchPendingEmployees = (companyId?: string) => {
+  const url = companyId ? `/api/pending-employees?companyId=${companyId}` : "/api/pending-employees";
+  return fetcher<PendingEmployee[]>(url);
 };
 export const handleLogout =async ()=>{
         const response = await fetch('/api/auth/logout', {

@@ -1,3 +1,8 @@
+export type Company = {
+    id: string;
+    name: string;
+};
+
 export type User = {
     id: string;
     username: string;
@@ -6,6 +11,8 @@ export type User = {
     avatar_url:string;
     email: string;
     role:string;
+    company_id?:string;
+    company?:Company;
   };
 export type Shift={
     id?:number;

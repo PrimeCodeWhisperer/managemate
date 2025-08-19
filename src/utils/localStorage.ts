@@ -4,7 +4,8 @@
 export const clearAppCache = () => {
   const keysToRemove = [
     'employees',
-    'userData', 
+    'userData',
+    'companyData',
     'cacheVersion'
   ];
 

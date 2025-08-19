@@ -7,15 +7,18 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button'
 import { fetchPendingEmployees } from '@/utils/api'
 import { PendingEmployee } from '@/lib/definitions'
+import { useSupabaseData } from '@/contexts/SupabaseContext'
 
 export default function PendingEmployeesCard() {
   const [pending, setPending] = useState<PendingEmployee[]>([])
+  const { company } = useSupabaseData()
 
   useEffect(() => {
-    fetchPendingEmployees()
+    if (!company?.id) return;
+    fetchPendingEmployees(company.id)
       .then(res => setPending(res || []))
       .catch(() => setPending([]))
-  }, [])
+  }, [company])
 
   return (
     <Card>

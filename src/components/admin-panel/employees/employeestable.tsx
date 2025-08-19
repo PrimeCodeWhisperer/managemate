@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { EmployeeInfoDialog } from './employee-info-dialog'
-import { fetchEmployees, fetchPendingEmployees } from '@/utils/api'
+import { fetchPendingEmployees } from '@/utils/api'
 import { Employee, PendingEmployee } from '@/lib/definitions'
 import { useSupabaseData } from '@/contexts/SupabaseContext'
 import { AddEmployeeDialog } from './add-employee-dialog'
@@ -18,7 +18,7 @@ import { clearAppCache, clearCacheAndLogout } from '@/utils/localStorage'
 
 
 export default function ProfilesPage() {
-  const { employees } = useSupabaseData()
+  const { employees, company } = useSupabaseData()
   const [profiles, setProfiles] = useState<Employee[]>([])
   const [pending, setPending] = useState<PendingEmployee[]>([])
   const [loading, setLoading] = useState(true)
@@ -33,12 +33,14 @@ export default function ProfilesPage() {
           setProfiles(employees || [])
         }
         // load pending
-        try {
-          const p = await fetchPendingEmployees()
-          console.log(p)
-          setPending(p)
-        } catch (e: any) {
-          console.error('Error fetching pending employees', e)
+        if (company?.id) {
+          try {
+            const p = await fetchPendingEmployees(company.id)
+            console.log(p)
+            setPending(p)
+          } catch (e: any) {
+            console.error('Error fetching pending employees', e)
+          }
         }
       } catch (error: any) {
         setError('Error fetching profiles: ' + error.message)
@@ -48,7 +50,7 @@ export default function ProfilesPage() {
     }
 
     fetchProfiles()
-  }, [employees])
+  }, [employees, company])
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this user?')) return
 

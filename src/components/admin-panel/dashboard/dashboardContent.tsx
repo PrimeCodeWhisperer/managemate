@@ -18,14 +18,15 @@ import ScheduleProgressCard from "./ScheduleProgressCard";
 const supabase = createClient()
 
 export default function DashboardContent() {
-  const { employees } = useSupabaseData()
+  const { employees, company } = useSupabaseData()
   const [pendingEmployees, setPendingEmployees] = useState(0)
   const [openShifts, setOpenShifts] = useState(0)
 
   const refreshCounts = useCallback(async () => {
+    if (!company?.id) return;
     try {
       const [pending, open] = await Promise.all([
-        fetchPendingEmployees().then(res => res?.length || 0).catch(() => 0),
+        fetchPendingEmployees(company.id).then(res => res?.length || 0).catch(() => 0),
         fetchOpenShifts(new Date()).then(res => res?.length || 0).catch(() => 0),
       ])
       setPendingEmployees(pending)
@@ -33,7 +34,7 @@ export default function DashboardContent() {
     } catch (err) {
       console.error('Error fetching dashboard data:', err)
     }
-  }, [])
+  }, [company])
 
   useEffect(() => {
     refreshCounts()
