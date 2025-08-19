@@ -5,6 +5,8 @@ import { Employee, User, Company } from '@/lib/definitions';
 import { fetchEmployees, getUser } from '@/utils/api';
 import { clearAppCache } from '@/utils/localStorage';
 
+const CACHE_REFRESH_INTERVAL = 6 * 60 * 60 * 1000; // 6 hours
+
 const supabase = createClient();
 
 // Define the shape of the context
@@ -29,9 +31,8 @@ export const SupabaseDataProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
 
   const CACHE_VERSION = '3.0';
-  const CACHE_REFRESH_INTERVAL = 5 * 60 * 1000;
 
-  const fetchData = useCallback(async (useCache: boolean) => {
+  const fetchData = useCallback(async (forceRefresh = false) => {
     setLoading(true);
     try {
       const cachedVersion = localStorage.getItem('cacheVersion');
@@ -40,11 +41,14 @@ export const SupabaseDataProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem('cacheVersion', CACHE_VERSION);
       }
 
+      const lastUpdate = Number(localStorage.getItem('lastUpdate') || 0);
+      const shouldRefresh = forceRefresh || Date.now() - lastUpdate > CACHE_REFRESH_INTERVAL;
+
       let employeesData: Employee[] | undefined;
       let userData: User | undefined;
       let companyData: Company | undefined;
 
-      if (useCache) {
+      if (!shouldRefresh) {
         try {
           const cachedEmployees = localStorage.getItem('employees');
           const cachedUser = localStorage.getItem('userData');
@@ -55,32 +59,31 @@ export const SupabaseDataProvider = ({ children }: { children: ReactNode }) => {
         } catch {
           clearAppCache();
         }
-
-        if (userData) setData(userData);
-        if (companyData) setCompany(companyData);
-        if (employeesData) setEmployees(employeesData);
       }
 
-      const currentUser = (await supabase.auth.getUser()).data.user;
-      if (currentUser?.id) {
-        userData = await getUser(currentUser.id);
-        if (userData?.role === 'admin') {
-          companyData = userData.company;
-          if (companyData?.id) {
-            employeesData = await fetchEmployees(companyData.id);
+      if (!userData || !companyData || !employeesData || shouldRefresh) {
+        const currentUser = (await supabase.auth.getUser()).data.user;
+        if (currentUser?.id) {
+          userData = await getUser(currentUser.id);
+          if (userData?.role === 'admin') {
+            companyData = userData.company;
+            if (companyData?.id) {
+              employeesData = await fetchEmployees(companyData.id);
+            }
+          } else {
+            localStorage.clear();
+            supabase.auth.signOut();
+            userData = undefined;
+            companyData = undefined;
+            employeesData = undefined;
           }
-        } else {
-          localStorage.clear();
-          supabase.auth.signOut();
-          userData = undefined;
-          companyData = undefined;
-          employeesData = undefined;
         }
-      }
 
-      if (userData) localStorage.setItem('userData', JSON.stringify(userData));
-      if (companyData) localStorage.setItem('companyData', JSON.stringify(companyData));
-      if (employeesData) localStorage.setItem('employees', JSON.stringify(employeesData));
+        if (userData) localStorage.setItem('userData', JSON.stringify(userData));
+        if (companyData) localStorage.setItem('companyData', JSON.stringify(companyData));
+        if (employeesData) localStorage.setItem('employees', JSON.stringify(employeesData));
+        localStorage.setItem('lastUpdate', Date.now().toString());
+      }
 
       setData(userData);
       setCompany(companyData);
@@ -90,21 +93,34 @@ export const SupabaseDataProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+    }, []);
 
   const clearCache = useCallback(() => {
     clearAppCache();
+    localStorage.removeItem('lastUpdate');
     setEmployees(undefined);
     setData(undefined);
     setCompany(undefined);
-    fetchData(false);
+    fetchData(true);
   }, [fetchData]);
 
   useEffect(() => {
-    fetchData(true);
-    const interval = setInterval(() => fetchData(false), CACHE_REFRESH_INTERVAL);
-    return () => clearInterval(interval);
-  }, [fetchData, CACHE_REFRESH_INTERVAL]);
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const scheduleRefresh = () => {
+      const last = Number(localStorage.getItem('lastUpdate') || 0);
+      const delay = Math.max(CACHE_REFRESH_INTERVAL - (Date.now() - last), 0);
+      timeoutId = setTimeout(async () => {
+        await fetchData(true);
+        scheduleRefresh();
+      }, delay);
+    };
+
+    fetchData();
+    scheduleRefresh();
+
+    return () => clearTimeout(timeoutId);
+  }, [fetchData]);
 
   return (
     <SupabaseDataContext.Provider value={{ data, company, employees, loading, error, clearCache }}>
