@@ -1,6 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
-import { PanelsTopLeft } from "lucide-react";
+import { PanelsTopLeft, Calendar, Users, Smartphone } from "lucide-react";
 import { ArrowRightIcon, GitHubLogoIcon } from "@radix-ui/react-icons";
 
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,16 @@ export default function HomePage() {
             <span className="font-bold">MangeMate</span>
             <span className="sr-only">ManageMate</span>
           </Link>
-          <nav className="ml-auto flex items-center gap-2">
+          <nav className="ml-auto flex items-center gap-4 text-sm font-medium">
+            <Link href="#features" className="hover:underline">
+              Features
+            </Link>
+            <Link href="#pricing" className="hover:underline">
+              Pricing
+            </Link>
+            <Link href="#contact" className="hover:underline">
+              Contact
+            </Link>
             <ModeToggle />
           </nav>
         </div>
@@ -42,42 +50,145 @@ export default function HomePage() {
               </Button>
             </div>
           </section>
-          {/* <div className="w-full flex justify-center relative">
-            <Image
-              src="/demo-light-min.png"
-              width={1080}
-              height={608}
-              alt="demo"
-              priority
-              className="border rounded-xl shadow-sm dark:hidden"
-            />
-            <Image
-              src="/demo-dark-min.png"
-              width={1080}
-              height={608}
-              alt="demo-dark"
-              priority
-              className="border border-zinc-600 rounded-xl shadow-sm hidden dark:block dark:shadow-gray-500/5"
-            />
-            <Image
-              src="/demo-mobile-light-min.png"
-              width={228}
-              height={494}
-              alt="demo-mobile"
-              className="border rounded-xl absolute bottom-0 right-0 hidden lg:block dark:hidden"
-            />
-            <Image
-              src="/demo-mobile-dark-min.png"
-              width={228}
-              height={494}
-              alt="demo-mobile"
-              className="border border-zinc-600 rounded-xl absolute bottom-0 right-0 hidden dark:lg:block"
-            />
-          </div> */}
+          <section
+            id="features"
+            className="mx-auto mt-12 max-w-[980px] py-12 md:py-24"
+          >
+            <h2 className="text-center text-3xl font-bold mb-8">Features</h2>
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="flex flex-col items-center text-center space-y-2">
+                <Calendar className="h-10 w-10" />
+                <h3 className="text-xl font-semibold">Smart Scheduling</h3>
+                <p className="text-muted-foreground">
+                  Plan tasks and events with an intuitive calendar that keeps
+                  everything organized.
+                </p>
+              </div>
+              <div className="flex flex-col items-center text-center space-y-2">
+                <Users className="h-10 w-10" />
+                <h3 className="text-xl font-semibold">Team Collaboration</h3>
+                <p className="text-muted-foreground">
+                  Share schedules and coordinate with teammates in real time.
+                </p>
+              </div>
+              <div className="flex flex-col items-center text-center space-y-2">
+                <Smartphone className="h-10 w-10" />
+                <h3 className="text-xl font-semibold">Access Anywhere</h3>
+                <p className="text-muted-foreground">
+                  Manage your agenda on desktop or mobile with full
+                  responsiveness.
+                </p>
+              </div>
+            </div>
+          </section>
+          <section
+            id="screenshot"
+            className="mx-auto max-w-[980px] py-12 md:py-24"
+          >
+            <h2 className="text-center text-3xl font-bold mb-8">
+              See ManageMate in action
+            </h2>
+            <div className="w-full h-64 bg-muted flex items-center justify-center rounded-md">
+              <span className="text-muted-foreground">
+                Placeholder for a screenshot or hero image of the application
+              </span>
+            </div>
+          </section>
+          <section
+            id="pricing"
+            className="mx-auto max-w-[980px] py-12 md:py-24"
+          >
+            <h2 className="text-center text-3xl font-bold mb-8">Pricing</h2>
+            <div className="grid gap-8 md:grid-cols-2">
+              <div className="border rounded-lg p-6 text-center space-y-4">
+                <h3 className="text-xl font-semibold">Free</h3>
+                <p className="text-muted-foreground">
+                  Basic scheduling features for individuals.
+                </p>
+                <div className="text-4xl font-bold">$0</div>
+                <Button>Get started</Button>
+              </div>
+              <div className="border rounded-lg p-6 text-center space-y-4">
+                <h3 className="text-xl font-semibold">Pro</h3>
+                <p className="text-muted-foreground">
+                  Advanced tools for power users and teams.
+                </p>
+                <div className="text-4xl font-bold">$9/mo</div>
+                <Button variant="outline">Contact sales</Button>
+              </div>
+            </div>
+          </section>
+          <section
+            id="testimonials"
+            className="mx-auto max-w-[980px] py-12 md:py-24"
+          >
+            <h2 className="text-center text-3xl font-bold mb-8">
+              What people are saying
+            </h2>
+            <div className="grid gap-8 md:grid-cols-2">
+              <div className="border rounded-lg p-6 space-y-4">
+                <p>
+                  &quot;Placeholder testimonial about how ManageMate simplified our
+                  workflow and saved hours each week.&quot;
+                </p>
+                <p className="font-semibold">Jane Doe, Company Inc.</p>
+              </div>
+              <div className="border rounded-lg p-6 space-y-4">
+                <p>
+                  &quot;Another placeholder testimonial highlighting the
+                  effectiveness of the scheduling features.&quot;
+                </p>
+                <p className="font-semibold">John Smith, Freelancer</p>
+              </div>
+            </div>
+          </section>
+          <section
+            id="contact"
+            className="mx-auto max-w-[980px] py-12 md:py-24"
+          >
+            <h2 className="text-center text-3xl font-bold mb-8">Get in touch</h2>
+            <p className="text-center text-muted-foreground">
+              Placeholder for contact information or a contact form. Include an
+              email address or form here.
+            </p>
+          </section>
+          <section
+            id="cta"
+            className="mx-auto max-w-[980px] py-12 md:py-24 text-center"
+          >
+            <h2 className="text-3xl font-bold mb-4">
+              Ready to take control of your schedule?
+            </h2>
+            <p className="mb-6 text-muted-foreground">
+              Sign up today and start planning with ManageMate.
+            </p>
+            <Button variant="default" asChild>
+              <Link href="/register">
+                Get Started
+                <ArrowRightIcon className="ml-2" />
+              </Link>
+            </Button>
+          </section>
         </div>
       </main>
       <footer className="py-6 md:py-0 border-t border-border/40">
-        
+        <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
+          <p className="text-sm text-muted-foreground">
+            &copy; {new Date().getFullYear()} ManageMate. All rights
+            reserved.
+          </p>
+          <div className="flex items-center gap-4 text-sm font-medium">
+            <Link
+              href="https://github.com/"
+              className="flex items-center gap-1 hover:underline"
+            >
+              <GitHubLogoIcon /> GitHub
+            </Link>
+            <Link href="#contact" className="hover:underline">
+              Contact
+            </Link>
+          </div>
+        </div>
       </footer>
     </div>
   );
