@@ -119,7 +119,7 @@ export default function VacationRequestsPage() {
             <TableBody>
               {requests.map((request) => (
                 <TableRow key={request.id}>
-                  <TableCell>{request.employee?.name}</TableCell>
+                  <TableCell>{request.employee?.username}</TableCell>
                   <TableCell>{format(new Date(request.start_date), 'PP')}</TableCell>
                   <TableCell>{format(new Date(request.end_date), 'PP')}</TableCell>
                   <TableCell>
