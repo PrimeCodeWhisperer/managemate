@@ -24,11 +24,11 @@ export async function GET(request: Request) {
   if (data.company_id) {
     const { data: companyData } = await supabase
       .from("companies")
-      .select("id, name")
+      .select("id, company_name")
       .eq("id", data.company_id)
       .single();
     if (companyData) {
-      company = { id: companyData.id, name: companyData.name };
+      company = { id: companyData.id, name: companyData.company_name };
     }
   }
 
