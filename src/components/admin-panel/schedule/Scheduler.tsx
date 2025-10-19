@@ -1,48 +1,74 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { addDays, format, parseISO, isSameDay, isWithinInterval, differenceInHours, add } from 'date-fns';
-import { Employee, Shift,TimeSpan,UpcomingShift } from '@/lib/definitions';
+import { addDays, format, parseISO, isSameDay, isWithinInterval } from 'date-fns';
+import { Availability, Shift, WeekCapacity } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { pubblishShifts } from '@/utils/supabaseClient';
 import CustomShiftDialog from './CustomShiftDialog';
 import {DropdownMenu, DropdownMenuContent, DropdownMenuTrigger,DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { redirect, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import EditShiftDialog from './EditShiftDialog';
 import InfoShiftDialog from './InfoShiftDialog';
 import { useSupabaseData } from '@/contexts/SupabaseContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { toast } from 'sonner';
+import { mapAvailabilitiesToCandidates, ScheduleSolution } from '@/utils/scheduling/autoScheduler';
 
-interface Availability {
-  week_start: string;
-  availability: {
-    [key: string]: { start: string; end: string }[];
-  };
-  employee?: Employee;
-}
+const WEEK_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const DEFAULT_DAY_CAP = 3;
+const DEFAULT_SPAN_CAP = 2;
 
 interface SchedulerProps {
   shifts?: Shift[];
   weekStart:string;
+  weekCapacity?: WeekCapacity;
 }
 
 export default function Component(props: SchedulerProps) {
   const [draft_shifts, setDraftShifts] = useState<Shift[]>([]);
+  const [availabilities, setAvailabilities] = useState<Availability[]>([]);
+  const [isAutoScheduling, setIsAutoScheduling] = useState(false);
+  const [autoError, setAutoError] = useState<string | null>(null);
+  const [isLoadingAvailabilities, setIsLoadingAvailabilities] = useState(false);
   const { employees } = useSupabaseData();
   const { timeSpans } = useSettings();
-  const selectedWeek = parseISO(props.weekStart);
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  const days_objs = days.map((day, index) => addDays(selectedWeek, index));
+  const selectedWeek = useMemo(() => parseISO(props.weekStart), [props.weekStart]);
+  const days_objs = useMemo(
+    () => WEEK_DAYS.map((_, index) => addDays(selectedWeek, index)),
+    [selectedWeek],
+  );
   const [isCustomShiftDialogOpen, setIsCustomShiftDialogOpen] = useState(false);
   const [isInfoShiftDialogOpen, setIsInfoShiftDialogOpen] = useState(false);
   const [isEditShiftDialogOpen, setIsEditShiftDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedShift, setSelectedShift] = useState<Shift | undefined>();
-  const [isDropDownOpen,setIsDropDownOpen]= useState<boolean>(false);
+  const effectiveWeekCapacity = useMemo<WeekCapacity>(() => {
+    const perDay: Record<string, number> = {};
+    const perSpan: Record<string, Record<number, number>> = {};
+
+    WEEK_DAYS.forEach((_, index) => {
+      const day = addDays(selectedWeek, index);
+      const dateKey = format(day, 'yyyy-MM-dd');
+      const providedDayCap =
+        props.weekCapacity?.perDay?.[dateKey] ?? props.weekCapacity?.perDay?.['*'];
+      perDay[dateKey] = providedDayCap ?? DEFAULT_DAY_CAP;
+
+      const spanCapacities: Record<number, number> = {};
+      timeSpans.forEach((span) => {
+        const providedSpanCap =
+          props.weekCapacity?.perSpan?.[dateKey]?.[span.id] ??
+          props.weekCapacity?.perSpan?.['*']?.[span.id];
+        spanCapacities[span.id] = providedSpanCap ?? DEFAULT_SPAN_CAP;
+      });
+      perSpan[dateKey] = spanCapacities;
+    });
+
+    return { perDay, perSpan };
+  }, [props.weekCapacity, selectedWeek, timeSpans]);
 
   const router=useRouter()
   //function that handles when a change into an already published schedule is made
@@ -103,76 +129,225 @@ export default function Component(props: SchedulerProps) {
     );
   };
   // When this item is clicked, close the dropdown and then open the dialog.
-  const handleOpenInfoDialog = () => {
-    // First close the dropdown.
-    setIsDropDownOpen(false);
-    // Then open the dialog.
-    setIsInfoShiftDialogOpen(true);
+  const buildAvailabilityPlaceholders = useCallback((records: Availability[]): Shift[] => {
+    const placeholders: Shift[] = [];
+
+    records.forEach((availabilityItem) => {
+      days_objs.forEach((day) => {
+        const isoDay = day.getDay();
+        const dayIndex = isoDay === 0 ? 6 : isoDay - 1;
+        const dayLabel = WEEK_DAYS[dayIndex];
+        const availabilitySlots = availabilityItem.availability?.[dayLabel];
+
+        if (!availabilitySlots || !availabilitySlots.length) {
+          return;
+        }
+
+        const slot = availabilitySlots[0];
+        if (!slot?.start) {
+          return;
+        }
+
+        const shift: Shift = {
+          user_id: availabilityItem.employee?.id,
+          date: format(day, 'yyyy-MM-dd'),
+          start_time: slot.start,
+          status: 'availability',
+        };
+
+        if (slot.end) {
+          shift.end_time = slot.end;
+        }
+
+        placeholders.push(shift);
+      });
+    });
+
+    return placeholders;
+  }, [days_objs]);
+
+  const handleAutoSchedule = async () => {
+    if (props.shifts || isAutoScheduling) {
+      return;
+    }
+
+    if (!employees || employees.length === 0 || !timeSpans.length) {
+      toast.error('Employees or time spans are not available.');
+      setAutoError('Employees or time spans are not available.');
+      return;
+    }
+
+    if (!availabilities.length) {
+      toast.error('No availability data loaded for this week.');
+      setAutoError('No availability data loaded for this week.');
+      return;
+    }
+
+    const hasManualEntries = draft_shifts.some(
+      (shift) => shift.status && shift.status !== 'availability',
+    );
+    if (hasManualEntries) {
+      const confirmed = window.confirm(
+        'Auto scheduling will replace existing shifts for this week. Continue?',
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    setIsAutoScheduling(true);
+    setAutoError(null);
+
+    try {
+      console.log('Auto scheduling started', {
+        weekStart: format(selectedWeek, 'yyyy-MM-dd'),
+      });
+
+      const candidates = mapAvailabilitiesToCandidates(availabilities, days_objs, timeSpans);
+      if (!candidates.length) {
+        toast.error('No candidates matched the current availability and time spans.');
+        setAutoError('No candidates matched the current availability and time spans.');
+        return;
+      }
+
+      const response = await fetch('/api/auto-schedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          candidates,
+          capacities: effectiveWeekCapacity,
+        }),
+      });
+
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload) {
+        const message =
+          (payload as { error?: string } | null)?.error ?? 'Auto scheduling failed.';
+        throw new Error(message);
+      }
+
+      const solution = payload as ScheduleSolution;
+
+      const assignments = solution.assignments.map((assignment) => ({
+        ...assignment,
+        status: 'auto-assigned',
+      }));
+
+      const openShifts: Shift[] = [];
+      solution.unfilled.forEach(({ day, spanId, remaining, gaps }) => {
+        const span = timeSpans.find((item) => item.id === spanId);
+        if (!span) {
+          return;
+        }
+        if (gaps?.length) {
+          gaps.forEach((gap) => {
+            if (gap.start_time === gap.end_time) {
+              return;
+            }
+            openShifts.push({
+              date: day,
+              start_time: gap.start_time,
+              end_time: gap.end_time,
+              status: 'open',
+            });
+          });
+        }
+
+        for (let count = 0; count < remaining; count += 1) {
+          openShifts.push({
+            date: day,
+            start_time: span.start_time,
+            end_time: span.end_time,
+            status: 'open',
+          });
+        }
+      });
+
+      console.log('Auto scheduling completed', solution);
+
+      setDraftShifts([...assignments, ...openShifts]);
+      toast.success('Auto schedule generated.');
+    } catch (error) {
+      console.error('Auto scheduling failed', error);
+      const message =
+        error instanceof Error ? error.message : 'Unable to auto schedule this week.';
+      setAutoError(message);
+      toast.error(message);
+    } finally {
+      setIsAutoScheduling(false);
+    }
   };
 
   useEffect(() => {
-    const fetchAvailabilities = async () => {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from('availabilities')
-        .select('*')
-        .eq('week_start', format(selectedWeek, 'yyyy-MM-dd'));
-
-      if (error) {
-        console.error('Error fetching availabilities:', error);
-      } else {
-        const availability_list = data.map((list_item:any) => {
-          const employee = employees?.find(employee => employee.id === list_item.employee_id);
-
-          return {
-            ...list_item,
-            employee: employee,
-          }
-        });
-        createInitialDraftShifts(availability_list);
-      }
-    };
-
-    const createInitialDraftShifts = (availabilities: Availability[]) => {
-      const shifts_drafts: Shift[] = [];
-
-    availabilities.forEach((avail) => {
-        for (const day of days_objs) {
-          let day_index;
-          if (day.getDay() === 0) {
-            day_index = 6;
-          } else {
-            day_index = day.getDay() - 1;
-          }
-          if (avail.availability[days[day_index]][0]) {
-            const employee_availability = avail.availability[days[day_index]][0];
-            if (employee_availability.start && employee_availability.end) {
-              const shift: Shift = {
-                user_id: avail.employee?.id,
-                date: format(day, 'yyyy-MM-dd'),
-                start_time: employee_availability.start,
-                status: 'availability'
-              }
-              shifts_drafts.push(shift);
-            }
-          }
-        }
-      })
-      setDraftShifts(shifts_drafts)
-    }
-
     if (!employees) {
       return;
     }
-    if(!props.shifts){
-      fetchAvailabilities();
-    }else if(draft_shifts.length==0){
-      setDraftShifts(props.shifts)
+
+    if (props.shifts) {
+      setAvailabilities([]);
+      setDraftShifts(props.shifts);
+      setIsLoadingAvailabilities(false);
+      return;
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[props.weekStart,employees, props.shifts]);
+
+    let isMounted = true;
+
+    const fetchAvailabilities = async () => {
+      setIsLoadingAvailabilities(true);
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from('availabilities')
+          .select('*')
+          .eq('week_start', format(selectedWeek, 'yyyy-MM-dd'));
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (error) {
+          console.error('Error fetching availabilities:', error);
+          setAvailabilities([]);
+          setDraftShifts([]);
+          setAutoError('Unable to load availability data.');
+          toast.error('Unable to load availability data.');
+        } else {
+          const availabilityList: Availability[] = data.map((item: any) => {
+            const employee = employees?.find((emp) => emp.id === item.employee_id);
+            return {
+              ...item,
+              employee,
+            };
+          });
+
+          setAvailabilities(availabilityList);
+          const placeholders = buildAvailabilityPlaceholders(availabilityList);
+          setDraftShifts(placeholders);
+          setAutoError(null);
+        }
+      } catch (err) {
+        if (!isMounted) {
+          return;
+        }
+        console.error('Unexpected error fetching availabilities:', err);
+        setAutoError('Unexpected error loading availability data.');
+        toast.error('Unexpected error loading availability data.');
+        setAvailabilities([]);
+        setDraftShifts([]);
+      } finally {
+        if (isMounted) {
+          setIsLoadingAvailabilities(false);
+        }
+      }
+    };
+
+    fetchAvailabilities();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [employees, props.shifts, props.weekStart, selectedWeek, buildAvailabilityPlaceholders]);
   const renderWeekSchedule = () => {
-    console.log(draft_shifts)
     return (
       <Card >
         <CardContent className="p-0">
@@ -207,17 +382,35 @@ export default function Component(props: SchedulerProps) {
                       {filteredShifts?.sort(function(a,b){return a.start_time.localeCompare(b.start_time)}).map((shift, index) => {
                         const employee = employees?.find(emp => emp.id === shift.user_id);
                         const startTime = parseISO(`2000-01-01T${shift.start_time}`);
-                        const endTime = parseISO(`2000-01-01T${shift.end_time}`);
+                        const endTime = shift.end_time ? parseISO(`2000-01-01T${shift.end_time}`) : undefined;
+                        const label =
+                          shift.status === 'open'
+                            ? 'Open shift'
+                            : employee?.username ?? 'Unassigned';
                         return (
                           <DropdownMenu key={`${shift.user_id}-${dayIndex}-${span.id}-${index}`} >
                             <DropdownMenuTrigger asChild className='w-full'>
                               <div
                                 key={`${shift.user_id}-${dayIndex}-${span.id}-${index}`}
-                                className={clsx("text-sm bg-background/10 border rounded p-2 mb-1 flex flex-col select-none cursor-pointer w-full",shift.status==='availability'&&'bg-green-300 border-green-500',shift.status==='open' && 'bg-blue-300 border-blue-500')}
+                                className={clsx(
+                                  'text-sm bg-background/10 border rounded p-2 mb-1 flex flex-col select-none cursor-pointer w-full',
+                                  shift.status === 'availability' && 'bg-green-300 border-green-500',
+                                  shift.status === 'open' && 'bg-blue-300 border-blue-500',
+                                  shift.status === 'auto-assigned' && 'bg-sky-200 border-sky-500',
+                                )}
                               >
-                                <div className="flex justify-between items-center font-semibold truncate">{employee?.username}</div>
+                                <div className="flex justify-between items-center font-semibold truncate">
+                                  {label}
+                                  {shift.status === 'auto-assigned' && (
+                                    <span className="ml-2 text-xs font-normal text-sky-700">Auto</span>
+                                  )}
+                                </div>
                                 <div className="text-xs text-foreground/60  flex justify-between items-center">
-                                  <span >{shift.end_time?`${format(startTime, 'h:mm a')} - ${format(endTime, 'h:mm a')}`:format(startTime, 'h:mm a')}</span>
+                                  <span>
+                                    {shift.end_time && endTime
+                                      ? `${format(startTime, 'h:mm a')} - ${format(endTime, 'h:mm a')}`
+                                      : format(startTime, 'h:mm a')}
+                                  </span>
                                 </div>
                               </div>
                             </DropdownMenuTrigger>
@@ -258,10 +451,17 @@ export default function Component(props: SchedulerProps) {
               </React.Fragment>
             ))}
           </div>
-        </CardContent>
+      </CardContent>
       </Card>
     );
   };
+
+  const autoButtonDisabled =
+    isAutoScheduling ||
+    isLoadingAvailabilities ||
+    !employees?.length ||
+    !timeSpans.length ||
+    !availabilities.length;
   
   return (
     <div className="space-y-4">
@@ -287,13 +487,28 @@ export default function Component(props: SchedulerProps) {
         shift={selectedShift}
         employee={employees?.find(emp=>emp.id===selectedShift?.user_id)}
       />
-      <div className='flex justify-end mt-4'>
-          {props.shifts ? (
-            <></>
-          ):(
-            <Button onClick={handlePublishSchedule}>Publish Schedule</Button>
+      {!props.shifts && (
+        <>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button
+              variant="outline"
+              onClick={handleAutoSchedule}
+              disabled={autoButtonDisabled}
+            >
+              {isAutoScheduling ? 'Auto Scheduling...' : 'Auto Schedule'}
+            </Button>
+            <Button
+              onClick={handlePublishSchedule}
+              disabled={isAutoScheduling || isLoadingAvailabilities}
+            >
+              Publish Schedule
+            </Button>
+          </div>
+          {autoError && (
+            <p className="text-sm text-destructive text-right">{autoError}</p>
           )}
-        </div>
+        </>
+      )}
     </div>
   );
 }

@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { addWeeks, format, startOfWeek } from 'date-fns'
+import { useEffect, useMemo, useState } from 'react'
+import { addDays, addWeeks, format, startOfWeek } from 'date-fns'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { fetchEmployeeAvailabilityByWeek, fetchOpenShifts, fetchShiftInsertion, fetchShifts } from '@/utils/supabaseClient'
 import WeekNavigator from './WeekNavigator'
 import Scheduler from './Scheduler'
-import { Shift } from '@/lib/definitions'
+import { Shift, WeekCapacity } from '@/lib/definitions'
 export default function ScheduleClient() {
   const [currentWeek, setCurrentWeek] = useState(() => {
     const today = new Date()
@@ -42,6 +42,20 @@ export default function ScheduleClient() {
     loadData()
   }, [currentWeek, weekPlanned])
 
+  const placeholderCapacity = useMemo<WeekCapacity>(() => {
+    const start = startOfWeek(currentWeek, { weekStartsOn: 1 })
+    const perDay: Record<string, number> = {}
+    const perSpan: Record<string, Record<number, number>> = {}
+
+    for (let offset = 0; offset < 7; offset += 1) {
+      const day = addDays(start, offset)
+      const key = format(day, 'yyyy-MM-dd')
+      perDay[key] = 2
+      perSpan[key] = {}
+    }
+
+    return { perDay, perSpan }
+  }, [currentWeek])
 
   return (
     <div className='py-6'>
@@ -74,9 +88,9 @@ export default function ScheduleClient() {
           {isLoading ? (
             <p>Loading...</p>
           ) : weekPlanned ? (
-            <Scheduler weekStart={currentWeek.toISOString()} shifts={shifts} />
+            <Scheduler weekStart={currentWeek.toISOString()} shifts={shifts} weekCapacity={placeholderCapacity} />
           ) : (
-            <Scheduler weekStart={currentWeek.toISOString()} />
+            <Scheduler weekStart={currentWeek.toISOString()} weekCapacity={placeholderCapacity} />
           ) }
         </CardContent>
       </Card>

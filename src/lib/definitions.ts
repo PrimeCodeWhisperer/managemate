@@ -7,6 +7,11 @@ export type User = {
     email: string;
     role:string;
   };
+// Shift status values currently used throughout scheduling flows:
+// - 'availability': placeholder entries representing employee availability
+// - 'auto-assigned': auto-scheduler assigned shift
+// - 'open': open shift without assigned employee
+// - 'unplanned': manually added but not yet assigned shift
 export type Shift={
     id?:number;
     user_id?:string;
@@ -71,4 +76,9 @@ export type TimeSpan = {
     name: string;
     start_time: string;
     end_time: string;
+};
+
+export type WeekCapacity = {
+    perDay: Record<string, number>;
+    perSpan: Record<string, Record<number, number>>;
 };
