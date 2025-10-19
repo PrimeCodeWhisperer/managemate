@@ -1,5 +1,5 @@
 {
-  "name": "shadcn-sidebar",
+  "name": "managemate",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -37,6 +37,7 @@
     "react": "^18",
     "react-day-picker": "^9.0.9",
     "react-dom": "^18",
+    "resend": "^6.2.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",

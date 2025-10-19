@@ -81,7 +81,7 @@ export default function HomePage() {
               </div>
             </div>
           </section>
-          <section
+          {/* <section
             id="screenshot"
             className="mx-auto max-w-[980px] py-12 md:py-24"
           >
@@ -93,7 +93,7 @@ export default function HomePage() {
                 Placeholder for a screenshot or hero image of the application
               </span>
             </div>
-          </section>
+          </section> */}
           <section
             id="pricing"
             className="mx-auto max-w-[980px] py-12 md:py-24"
@@ -118,7 +118,7 @@ export default function HomePage() {
               </div>
             </div>
           </section>
-          <section
+          {/* <section
             id="testimonials"
             className="mx-auto max-w-[980px] py-12 md:py-24"
           >
@@ -141,7 +141,7 @@ export default function HomePage() {
                 <p className="font-semibold">John Smith, Freelancer</p>
               </div>
             </div>
-          </section>
+          </section> */}
           <section
             id="contact"
             className="mx-auto max-w-[980px] py-12 md:py-24"

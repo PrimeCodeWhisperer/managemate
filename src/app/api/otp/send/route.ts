@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { createClient } from "@/utils/supabase/server";
 
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: NextRequest) {
-  const { username,email, password } = await req.json();
+  const { username, email, password } = await req.json();
 
   if (!email || !password) {
     return NextResponse.json(
@@ -13,13 +14,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const {
-    GMAIL_USERNAME,
-    GMAIL_PASSWORD,
-  } = process.env;
-
-  if (!GMAIL_USERNAME || !GMAIL_PASSWORD) {
-    return NextResponse.json({ message: "Email env vars not set." }, { status: 500 });
+  if (!process.env.RESEND_API_KEY) {
+    return NextResponse.json(
+      { message: "Resend API key is not configured." },
+      { status: 500 },
+    );
   }
 
   const supabase = createClient();
@@ -28,13 +27,12 @@ export async function POST(req: NextRequest) {
     data: { user },
     error: createUserError,
   } = await supabase.auth.admin.createUser({
-    email:email,
-    password:password,
-    email_confirm:true,
-    user_metadata:{username:username}
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { username },
   });
-  
-  
+
   if (createUserError || !user) {
     return NextResponse.json(
       {
@@ -44,35 +42,29 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  
-  const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    auth: {
-      user: GMAIL_USERNAME,
-      pass: GMAIL_PASSWORD,
-    },
-  });
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const loginUrl = `${baseUrl}/login?email=${user.email}`;
+  const fromAddress =
+    process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
   try {
-    await transporter.verify();
-
-    await transporter.sendMail({
-      from: GMAIL_USERNAME,
+    await resend.emails.send({
+      from: fromAddress,
       to: email,
-      subject: "Your account details",
+      subject: "Your ManageMate account details",
       text: `Your password is ${password}. Use the following link to login and verify your account: ${loginUrl}`,
-      html: `<p>Your password is <strong>${password}</strong></p><p><a href="${loginUrl}">Click here to login with your one-time code</a></p>`,
+      html: ` <p>Your password is <strong>${password}</strong></p>
+              <p><a href="${loginUrl}">Click here to login with your one-time code</a></p>
+              <br/>
+              <p>This email has been auto-generated so please do not reply to it</p>`,
     });
 
     return NextResponse.json({ message: "OTP sent" }, { status: 200 });
   } catch (error) {
     console.error("Failed to send OTP", error);
-    const message = error instanceof Error ? error.message : "Failed to send OTP";
+    const message =
+      error instanceof Error ? error.message : "Failed to send OTP";
     return NextResponse.json({ message }, { status: 500 });
   }
 }
