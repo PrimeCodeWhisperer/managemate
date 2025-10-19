@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { CandidateAssignment, ScheduleSolution, WeekCapacity } from '@/utils/scheduling/autoScheduler';
+import { CandidateAssignment, ScheduleSolution } from '@/utils/scheduling/autoScheduler';
 import { solveSchedule } from '@/utils/scheduling/autoScheduler.server';
+import { WeekCapacity } from '@/lib/definitions';
 
 type AutoScheduleRequest = {
   candidates: CandidateAssignment[];

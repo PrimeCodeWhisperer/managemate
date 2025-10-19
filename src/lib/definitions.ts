@@ -82,3 +82,7 @@ export type WeekCapacity = {
     perDay: Record<string, number>;
     perSpan: Record<string, Record<number, number>>;
 };
+
+export type AutoScheduleSettings = {
+    defaultPerDay: number;
+};

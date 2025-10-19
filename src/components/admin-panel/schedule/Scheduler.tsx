@@ -5,7 +5,7 @@ import { createClient } from '@/utils/supabase/client';
 import { addDays, format, parseISO, isSameDay, isWithinInterval } from 'date-fns';
 import { Availability, Shift, WeekCapacity } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { pubblishShifts } from '@/utils/supabaseClient';
 import CustomShiftDialog from './CustomShiftDialog';
 import {DropdownMenu, DropdownMenuContent, DropdownMenuTrigger,DropdownMenuItem } from '@/components/ui/dropdown-menu';
@@ -17,15 +17,12 @@ import { useSupabaseData } from '@/contexts/SupabaseContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { toast } from 'sonner';
 import { mapAvailabilitiesToCandidates, ScheduleSolution } from '@/utils/scheduling/autoScheduler';
+import { Input } from '@/components/ui/input';
 
 const WEEK_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const DEFAULT_DAY_CAP = 3;
-const DEFAULT_SPAN_CAP = 2;
-
 interface SchedulerProps {
   shifts?: Shift[];
   weekStart:string;
-  weekCapacity?: WeekCapacity;
 }
 
 export default function Component(props: SchedulerProps) {
@@ -35,7 +32,7 @@ export default function Component(props: SchedulerProps) {
   const [autoError, setAutoError] = useState<string | null>(null);
   const [isLoadingAvailabilities, setIsLoadingAvailabilities] = useState(false);
   const { employees } = useSupabaseData();
-  const { timeSpans } = useSettings();
+  const { timeSpans, defaultDailyCapacity } = useSettings();
   const selectedWeek = useMemo(() => parseISO(props.weekStart), [props.weekStart]);
   const days_objs = useMemo(
     () => WEEK_DAYS.map((_, index) => addDays(selectedWeek, index)),
@@ -46,6 +43,7 @@ export default function Component(props: SchedulerProps) {
   const [isEditShiftDialogOpen, setIsEditShiftDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedShift, setSelectedShift] = useState<Shift | undefined>();
+  const [weekCapacities, setWeekCapacities] = useState<Record<string, number>>({});
   const effectiveWeekCapacity = useMemo<WeekCapacity>(() => {
     const perDay: Record<string, number> = {};
     const perSpan: Record<string, Record<number, number>> = {};
@@ -53,22 +51,20 @@ export default function Component(props: SchedulerProps) {
     WEEK_DAYS.forEach((_, index) => {
       const day = addDays(selectedWeek, index);
       const dateKey = format(day, 'yyyy-MM-dd');
-      const providedDayCap =
-        props.weekCapacity?.perDay?.[dateKey] ?? props.weekCapacity?.perDay?.['*'];
-      perDay[dateKey] = providedDayCap ?? DEFAULT_DAY_CAP;
+      const providedDayCap = weekCapacities[dateKey];
+      const dayCapacity =
+        typeof providedDayCap === 'number' ? providedDayCap : defaultDailyCapacity;
+      perDay[dateKey] = dayCapacity;
 
       const spanCapacities: Record<number, number> = {};
       timeSpans.forEach((span) => {
-        const providedSpanCap =
-          props.weekCapacity?.perSpan?.[dateKey]?.[span.id] ??
-          props.weekCapacity?.perSpan?.['*']?.[span.id];
-        spanCapacities[span.id] = providedSpanCap ?? DEFAULT_SPAN_CAP;
+        spanCapacities[span.id] = dayCapacity;
       });
       perSpan[dateKey] = spanCapacities;
     });
 
     return { perDay, perSpan };
-  }, [props.weekCapacity, selectedWeek, timeSpans]);
+  }, [selectedWeek, timeSpans, defaultDailyCapacity, weekCapacities]);
 
   const router=useRouter()
   //function that handles when a change into an already published schedule is made
@@ -165,6 +161,26 @@ export default function Component(props: SchedulerProps) {
 
     return placeholders;
   }, [days_objs]);
+
+  useEffect(() => {
+    const next: Record<string, number> = {};
+    WEEK_DAYS.forEach((_, index) => {
+      const day = addDays(selectedWeek, index);
+      next[format(day, 'yyyy-MM-dd')] = defaultDailyCapacity;
+    });
+    setWeekCapacities(next);
+  }, [defaultDailyCapacity, selectedWeek]);
+
+  const handleCapacityInputChange = (dateKey: string, value: string) => {
+    const parsed = Number(value);
+    if (Number.isNaN(parsed)) {
+      return;
+    }
+    setWeekCapacities((prev) => ({
+      ...prev,
+      [dateKey]: Math.max(0, Math.round(parsed)),
+    }));
+  };
 
   const handleAutoSchedule = async () => {
     if (props.shifts || isAutoScheduling) {
@@ -465,8 +481,39 @@ export default function Component(props: SchedulerProps) {
   
   return (
     <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Headcount goals for this week</CardTitle>
+          <CardDescription>
+            Tell the auto-scheduler how many people you need each day. These numbers only apply to the week you are viewing.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+            {days_objs.map((day) => {
+              const dateKey = format(day, 'yyyy-MM-dd');
+              return (
+                <div key={dateKey} className="space-y-2">
+                  <p className="text-sm font-medium">{format(day, 'EEE d')}</p>
+                  <Input
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={weekCapacities[dateKey] ?? defaultDailyCapacity}
+                    onChange={(event) => handleCapacityInputChange(dateKey, event.target.value)}
+                    disabled={Boolean(props.shifts)}
+                  />
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            These numbers live only while you work on this week. Adjust them, run Auto Schedule, and they’ll reset the next time you come back.
+          </p>
+        </CardContent>
+      </Card>
       {renderWeekSchedule()}
-      
+
       <EditShiftDialog
         isOpen={isEditShiftDialogOpen}
         onClose={()=>setIsEditShiftDialogOpen(false)}
