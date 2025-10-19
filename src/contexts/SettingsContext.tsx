@@ -1,10 +1,12 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { TimeSpan } from "@/lib/definitions";
+import { AutoScheduleSettings, TimeSpan } from "@/lib/definitions";
 
 interface SettingsContextType {
   timeSpans: TimeSpan[];
+  defaultDailyCapacity: number;
+  setDefaultDailyCapacity: (capacity: number) => void;
   addTimeSpan: (span: Omit<TimeSpan, "id">) => void;
   updateTimeSpan: (span: TimeSpan) => void;
   removeTimeSpan: (id: number) => void;
@@ -22,6 +24,7 @@ export const SettingsProvider = ({
 }) => {
   const [timeSpans, setTimeSpans] = useState<TimeSpan[]>([]);
   const [removedSpanIds, setRemovedSpanIds] = useState<number[]>([]);
+  const [defaultDailyCapacity, setDefaultDailyCapacity] = useState<number>(2);
 
   useEffect(() => {
     const fetchSpans = async () => {
@@ -32,6 +35,19 @@ export const SettingsProvider = ({
       }
     };
     fetchSpans();
+  }, []);
+
+  useEffect(() => {
+    const fetchAutoScheduleSettings = async () => {
+      const res = await fetch("/api/auto-schedule-settings", { cache: "no-store" });
+      if (res.ok) {
+        const data: AutoScheduleSettings = await res.json();
+        if (typeof data?.defaultPerDay === "number") {
+          setDefaultDailyCapacity(data.defaultPerDay);
+        }
+      }
+    };
+    fetchAutoScheduleSettings();
   }, []);
 
   const addTimeSpan = (span: Omit<TimeSpan, "id">) => {
@@ -99,11 +115,28 @@ export const SettingsProvider = ({
       const data: TimeSpan[] = await res.json();
       setTimeSpans(data);
     }
+
+    const saveSettingsResponse = await fetch("/api/auto-schedule-settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ defaultPerDay: defaultDailyCapacity }),
+    });
+    if (!saveSettingsResponse.ok) {
+      console.error("Failed to save auto schedule defaults", await saveSettingsResponse.text());
+    }
   };
 
   return (
     <SettingsContext.Provider
-      value={{ timeSpans, addTimeSpan, updateTimeSpan, removeTimeSpan, saveChanges }}
+      value={{
+        timeSpans,
+        defaultDailyCapacity,
+        setDefaultDailyCapacity,
+        addTimeSpan,
+        updateTimeSpan,
+        removeTimeSpan,
+        saveChanges,
+      }}
     >
 
       {children}

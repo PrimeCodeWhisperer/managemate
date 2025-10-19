@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { addWeeks, format, startOfWeek } from 'date-fns'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { fetchEmployeeAvailabilityByWeek, fetchOpenShifts, fetchShiftInsertion, fetchShifts } from '@/utils/supabaseClient'
+import { fetchOpenShifts, fetchShiftInsertion, fetchShifts } from '@/utils/supabaseClient'
 import WeekNavigator from './WeekNavigator'
 import Scheduler from './Scheduler'
 import { Shift } from '@/lib/definitions'
@@ -41,7 +41,6 @@ export default function ScheduleClient() {
     }
     loadData()
   }, [currentWeek, weekPlanned])
-
 
   return (
     <div className='py-6'>
