@@ -3,22 +3,30 @@
 > ManageMate is a workforce scheduling and operations dashboard built on Next.js&nbsp;14, Supabase, and shadcn/ui. It helps operations teams turn employee availability into coverage, track outstanding shifts, and close the loop on timesheets and leave requests.
 
 ## Table of Contents
-- [Feature Highlights](#feature-highlights)
-- [Architecture at a Glance](#architecture-at-a-glance)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Environment Variables](#environment-variables)
-  - [Install & Run](#install--run)
-- [Supabase Schema & Migrations](#supabase-schema--migrations)
-- [Core Workflows](#core-workflows)
-- [Project Layout](#project-layout)
-- [Tooling & Scripts](#tooling--scripts)
-- [Troubleshooting](#troubleshooting)
-- [License](#license)
+- [ManageMate](#managemate)
+  - [Table of Contents](#table-of-contents)
+  - [Feature Highlights](#feature-highlights)
+  - [Architecture at a Glance](#architecture-at-a-glance)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Environment Variables](#environment-variables)
+    - [Install \& Run](#install--run)
+  - [Supabase Schema \& Migrations](#supabase-schema--migrations)
+  - [Core Workflows](#core-workflows)
+  - [Project Layout](#project-layout)
+  - [Tooling \& Scripts](#tooling--scripts)
+  - [Troubleshooting](#troubleshooting)
+  - [License](#license)
 
 ## Feature Highlights
 - Auto-scheduler uses employee availability, configurable time spans, and linear programming (via `javascript-lp-solver`) to generate balanced weekly coverage and surface open shifts or gaps in real time.
+  
+  ![Auto Scheduler Interface](/screenshots/scheduler.png)
+
 - Manual scheduling controls let admins add, edit, or delete shifts, override daily coverage targets, and publish drafts to Supabase (`upcoming_shifts`, `open_shifts`, `week_shifts`) when ready.
+  
+  ![Schedule Editor](/screenshots/schedule-editor.png)
+
 - Dashboard widgets track pending employee approvals, open shifts, availability submissions, and vacation requests with live Supabase channel updates.
 - Employee onboarding flows create Supabase auth users, notify them via email (nodemailer + Gmail SMTP), and manage pending/active staff from a single table.
 - Timesheet views aggregate hours from `past_shifts`, roll up monthly summaries, and drill into per-employee history.
@@ -26,6 +34,52 @@
 - Responsive, theme-aware UI powered by shadcn/ui, Tailwind CSS, and lucide icons with persistent sidebar state stored via Zustand.
 
 ## Architecture at a Glance
+
+```mermaid
+graph TB
+    subgraph Client
+        UI[Next.js UI<br/>shadcn/ui + Tailwind]
+        State[Zustand + React Context]
+    end
+
+    subgraph Backend
+        API[API Routes]
+        Actions[Server Actions]
+    end
+
+    subgraph Supabase
+        Auth[Authentication]
+        DB[(Database)]
+        Realtime[Live Updates]
+    end
+
+    subgraph External
+        SMTP[Gmail SMTP]
+        Solver[LP Solver<br/>Auto-Scheduler]
+    end
+
+    UI --> State
+    UI --> API
+    UI --> Actions
+    
+    API --> Auth
+    Actions --> Auth
+    
+    Auth --> DB
+    DB --> Realtime
+    Realtime --> UI
+    
+    API --> SMTP
+    Actions --> Solver
+    Solver --> DB
+    
+    style UI fill:#4F46E5,stroke:#312E81,color:#fff
+    style Auth fill:#3ECF8E,stroke:#059669,color:#fff
+    style DB fill:#3ECF8E,stroke:#059669,color:#fff
+    style SMTP fill:#EA4335,stroke:#B91C1C,color:#fff
+    style Solver fill:#F59E0B,stroke:#D97706,color:#fff
+```
+
 - **Next.js 14 (App Router)** for server-side rendering, API routes, and routing.
 - **Supabase** handles authentication, row-level security, Postgres storage, and real-time channels used across dashboards.
 - **javascript-lp-solver** powers the auto-scheduling engine with fairness weighting and gap detection.
@@ -97,6 +151,7 @@ Create a `.env.local` file in the project root with the following values:
   - Pending users appear in the Pending section until they authenticate; admins can delete users if necessary.
 - **Dashboard & Monitoring**
   - The dashboard surfaces total employees, open shifts, availability submission progress, and vacation request counts with live Supabase channel updates.
+  ![Dashboard View](screenshots/dashboard.png)
 - **Timesheets**
   - Monthly overview aggregates `past_shifts` by employee; drill into a specific teammate to review shift-level history.
 - **Vacation Management**
