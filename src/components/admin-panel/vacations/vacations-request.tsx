@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, FormEvent } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,10 @@ import { format } from 'date-fns'
 import { Employee } from '@/lib/definitions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useSupabaseData } from '@/contexts/SupabaseContext'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface VacationRequest {
   id: string
@@ -25,8 +29,21 @@ export default function VacationRequestsPage() {
   const [requests, setRequests] = useState<VacationRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [editingRequest, setEditingRequest] = useState<VacationRequest | null>(null)
+  const [editForm, setEditForm] = useState<{ start_date: string; end_date: string; status: VacationRequest['status'] }>({
+    start_date: '',
+    end_date: '',
+    status: 'approved',
+  })
+  const [savingEdit, setSavingEdit] = useState(false)
   const supabase = createClient()
   const { employees } = useSupabaseData()
+
+  const toDateInputValue = (date: string) => {
+    if (!date) return ''
+    const [day] = date.split('T')
+    return day || date.slice(0, 10)
+  }
 
   useEffect(() => {
     const fetchVacationRequests = async () => {
@@ -65,6 +82,7 @@ export default function VacationRequestsPage() {
 
   const handleStatusUpdate = async (id: string, newStatus: 'approved' | 'rejected') => {
     try {
+      setError(null)
       const { error } = await supabase
         .from('vacations_requests')
         .update({ status: newStatus })
@@ -79,6 +97,60 @@ export default function VacationRequestsPage() {
       ))
     } catch (error: any) {
       setError('Error updating request status: ' + error.message)
+    }
+  }
+
+  const handleModifyClick = (request: VacationRequest) => {
+    setError(null)
+    setEditForm({
+      start_date: toDateInputValue(request.start_date),
+      end_date: toDateInputValue(request.end_date),
+      status: request.status,
+    })
+    setEditingRequest(request)
+  }
+
+  const handleEditSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!editingRequest) {
+      return
+    }
+    setSavingEdit(true)
+    setError(null)
+
+    try {
+      const updates = {
+        start_date: editForm.start_date,
+        end_date: editForm.end_date,
+        status: editForm.status,
+      }
+
+      const { error } = await supabase
+        .from('vacations_requests')
+        .update(updates)
+        .eq('id', editingRequest.id)
+
+      if (error) {
+        throw error
+      }
+
+      setRequests(prev =>
+        prev.map(request =>
+          request.id === editingRequest.id ? { ...request, ...updates } : request
+        )
+      )
+
+      setEditingRequest(null)
+    } catch (error: any) {
+      setError('Error updating vacation request: ' + error.message)
+    } finally {
+      setSavingEdit(false)
+    }
+  }
+
+  const handleDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      setEditingRequest(null)
     }
   }
 
@@ -131,7 +203,7 @@ export default function VacationRequestsPage() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {request.status === 'pending' && (
+                    {request.status === 'pending' ? (
                       <div className="flex space-x-2">
                         <Button
                           variant="outline"
@@ -150,6 +222,14 @@ export default function VacationRequestsPage() {
                           Reject
                         </Button>
                       </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleModifyClick(request)}
+                      >
+                        Modify
+                      </Button>
                     )}
                   </TableCell>
                 </TableRow>
@@ -157,8 +237,79 @@ export default function VacationRequestsPage() {
             </TableBody>
           </Table>
         </CardContent>
-        
+
       </Card>
+      <Dialog open={!!editingRequest} onOpenChange={handleDialogOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modify Vacation Request</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="start_date">Start Date</Label>
+              <Input
+                id="start_date"
+                type="date"
+                value={editForm.start_date}
+                onChange={(event) =>
+                  setEditForm(prev => ({ ...prev, start_date: event.target.value }))
+                }
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="end_date">End Date</Label>
+              <Input
+                id="end_date"
+                type="date"
+                value={editForm.end_date}
+                onChange={(event) =>
+                  setEditForm(prev => ({ ...prev, end_date: event.target.value }))
+                }
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select
+                value={editForm.status}
+                onValueChange={(value) =>
+                  setEditForm(prev => ({ ...prev, status: value as VacationRequest['status'] }))
+                }
+              >
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditingRequest(null)}
+                disabled={savingEdit}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={savingEdit}>
+                {savingEdit ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save changes'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
     
   )

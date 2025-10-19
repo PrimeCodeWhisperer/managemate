@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 interface CustomShiftDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (shift: { user_id: string; start_time: string ,open_shift:boolean}) => void;
+  onSave: (shift: { user_id: string; start_time: string; end_time?: string | null; open_shift: boolean }) => void;
   date: Date | null;
   employees?: Employee[];
 }
@@ -19,11 +19,19 @@ interface CustomShiftDialogProps {
 const CustomShiftDialog: React.FC<CustomShiftDialogProps> = ({ isOpen, onClose, onSave, employees }) => {
   const [employee, setEmployee] = useState<string>('');
   const [startTime, setStartTime] = useState<string>('');
-  const [isOpenShift,setIsOpenShift]=useState<boolean>(false)
-  
+  const [endTime, setEndTime] = useState<string>('');
+  const [includeEndTime, setIncludeEndTime] = useState(false);
+  const [isOpenShift, setIsOpenShift] = useState<boolean>(false);
 
   const handleSave = () => {
-    onSave({ user_id: employee, start_time: startTime ,open_shift:isOpenShift});
+    const payload = {
+      user_id: employee,
+      start_time: startTime,
+      end_time: includeEndTime && endTime ? endTime : undefined,
+      open_shift: isOpenShift,
+    };
+
+    onSave(payload);
     onClose();
   };
 
@@ -48,7 +56,16 @@ const CustomShiftDialog: React.FC<CustomShiftDialogProps> = ({ isOpen, onClose, 
             </SelectContent>
           </Select>
           <div className='flex items-center space-x-2'>
-            <Checkbox id="open_shift" onClick={()=>{isOpenShift===false?setIsOpenShift(true):setIsOpenShift(false)}} checked={isOpenShift}/>
+            <Checkbox
+              id="open_shift"
+              checked={isOpenShift}
+              onCheckedChange={(checked) => {
+                setIsOpenShift(Boolean(checked));
+                if (checked) {
+                  setEmployee('');
+                }
+              }}
+            />
             <Label className=' opacity-75' htmlFor='open_shift'>Select as open shift</Label>
           </div>
           <Label>Select start time</Label>
@@ -58,14 +75,32 @@ const CustomShiftDialog: React.FC<CustomShiftDialogProps> = ({ isOpen, onClose, 
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
           />
-          {/*//TODOIf end time is setted by settings, show also end time
-          <Input
-            type="time"
-            placeholder="End Time"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-          />
-          */}
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="include_end_time"
+              checked={includeEndTime}
+              onCheckedChange={(checked) => {
+                const isChecked = Boolean(checked);
+                setIncludeEndTime(isChecked);
+                if (!isChecked) {
+                  setEndTime('');
+                }
+              }}
+            />
+            <Label className="opacity-75" htmlFor="include_end_time">Add end time</Label>
+          </div>
+          {includeEndTime && (
+            <>
+              <Label>Select end time</Label>
+              <Input
+                type="time"
+                placeholder="End Time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                min={startTime}
+              />
+            </>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>

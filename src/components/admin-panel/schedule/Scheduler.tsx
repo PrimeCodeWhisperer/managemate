@@ -54,37 +54,51 @@ export default function Component(props: SchedulerProps) {
     router.push('/publish-schedule-success');
   }
 
-  const handleSaveCustomShift = (shift: { user_id: string; start_time: string ;open_shift:boolean}) => {
-    
-    if (selectedDate) {
-      let newShift: Shift;
-      if(shift.open_shift==true){
-        newShift={
-          date: format(selectedDate, 'yyyy-MM-dd'),
-          start_time: shift.start_time,
-          status:'open'
-        }
-      }else{
-        newShift={
-          user_id: shift.user_id,
-          date: format(selectedDate, 'yyyy-MM-dd'),
-          start_time: shift.start_time,
-          status:'unplanned'
-          }
-      }
-      console.log(newShift)
-      if(newShift.start_time<timeSpans[0].start_time || (newShift.end_time?(newShift.end_time>timeSpans[timeSpans.length-1].end_time):false)){
-        toast("Shift out of timespan")
-      }else{
-        setDraftShifts((shifts)=>[...shifts,newShift])
-      }
-      console.log(draft_shifts)
+  const handleSaveCustomShift = (shift: { user_id: string; start_time: string; end_time?: string | null; open_shift: boolean }) => {
+    const baseDate = selectedDate ?? (selectedShift ? new Date(selectedShift.date) : null);
+
+    if (!baseDate) {
+      return;
+    }
+
+    if (shift.end_time && shift.end_time <= shift.start_time) {
+      toast("End time must be after start time");
+      return;
+    }
+
+    const newShift: Shift = {
+      date: format(baseDate, 'yyyy-MM-dd'),
+      start_time: shift.start_time,
+      status: shift.open_shift ? 'open' : 'unplanned',
+    };
+
+    if (!shift.open_shift) {
+      newShift.user_id = shift.user_id;
+    }
+
+    if (shift.end_time) {
+      newShift.end_time = shift.end_time;
+    }
+
+    if (
+      timeSpans.length &&
+      (newShift.start_time < timeSpans[0].start_time ||
+        (newShift.end_time ? newShift.end_time > timeSpans[timeSpans.length - 1].end_time : false))
+    ) {
+      toast("Shift out of timespan");
+    } else {
+      setDraftShifts((shifts) => [...shifts, newShift]);
     }
   };
   const handleShiftDelete = (shiftToDelete: Shift) => {
-    setDraftShifts(prevShifts => 
-      prevShifts.filter(shift => 
-        !(shift.user_id === shiftToDelete.user_id && shift.start_time== shiftToDelete.start_time&& isSameDay(shift.date, shiftToDelete.date))
+    setDraftShifts(prevShifts =>
+      prevShifts.filter(shift =>
+        !(
+          shift.user_id === shiftToDelete.user_id &&
+          shift.start_time == shiftToDelete.start_time &&
+          shift.end_time === shiftToDelete.end_time &&
+          isSameDay(shift.date, shiftToDelete.date)
+        )
       )
     );
   };
@@ -193,6 +207,7 @@ export default function Component(props: SchedulerProps) {
                       {filteredShifts?.sort(function(a,b){return a.start_time.localeCompare(b.start_time)}).map((shift, index) => {
                         const employee = employees?.find(emp => emp.id === shift.user_id);
                         const startTime = parseISO(`2000-01-01T${shift.start_time}`);
+                        const endTime = parseISO(`2000-01-01T${shift.end_time}`);
                         return (
                           <DropdownMenu key={`${shift.user_id}-${dayIndex}-${span.id}-${index}`} >
                             <DropdownMenuTrigger asChild className='w-full'>
@@ -202,7 +217,7 @@ export default function Component(props: SchedulerProps) {
                               >
                                 <div className="flex justify-between items-center font-semibold truncate">{employee?.username}</div>
                                 <div className="text-xs text-foreground/60  flex justify-between items-center">
-                                  <span >{format(startTime, 'h:mm a')}</span>
+                                  <span >{shift.end_time?`${format(startTime, 'h:mm a')} - ${format(endTime, 'h:mm a')}`:format(startTime, 'h:mm a')}</span>
                                 </div>
                               </div>
                             </DropdownMenuTrigger>

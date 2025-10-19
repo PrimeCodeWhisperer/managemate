@@ -6,25 +6,27 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Employee, Shift } from '@/lib/definitions';
 import { Label } from '@/components/ui/label';
-import { tree } from 'next/dist/build/templates/app-page';
 import { Checkbox } from '@/components/ui/checkbox';
 
-interface CustomShiftDialogProps {
+interface EditShiftDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (shift: { user_id: string; start_time: string ,open_shift:boolean}) => void;
-  shift?:Shift;
+  onSave: (shift: { user_id: string; start_time: string; end_time?: string | null; open_shift: boolean }) => void;
+  shift?: Shift;
   employees?: Employee[];
 }
 
-const EditShiftDialog: React.FC<CustomShiftDialogProps> = ({ isOpen, onClose, onSave, employees,shift }) => {
+const EditShiftDialog: React.FC<EditShiftDialogProps> = ({ isOpen, onClose, onSave, employees, shift }) => {
   const [employee, setEmployee] = useState<string>('');
   const [startTime, setStartTime] = useState<string>('');
   const [isOpenShift, setIsOpenShift] = useState<boolean>(false);
-  const [endTime, setEndTime] = useState<string>();
+  const [endTime, setEndTime] = useState<string>('');
+  const [includeEndTime, setIncludeEndTime] = useState(false);
+  const [shouldRestore, setShouldRestore] = useState(true);
   const ogEmployee=shift?.user_id?shift?.user_id:'';
   const ogStartTime=shift?.start_time?shift?.start_time:'';
   const ogOpen=shift?.status==='open'?true:false;
+  const ogEndTime = shift?.end_time ?? undefined;
 
   useEffect(() => {
     if (shift) {
@@ -36,24 +38,51 @@ const EditShiftDialog: React.FC<CustomShiftDialogProps> = ({ isOpen, onClose, on
       }
       if(shift.status==='open'){
         setIsOpenShift(true);
+      } else {
+        setIsOpenShift(false);
       }
+      if (shift.end_time) {
+        setEndTime(shift.end_time);
+        setIncludeEndTime(true);
+      } else {
+        setEndTime('');
+        setIncludeEndTime(false);
+      }
+      setShouldRestore(true);
     }
   }, [shift]);
 
   const handleSave = () => {
-    if (shift) {
-      const updatedShift: Shift = {
-        ...shift,
-        user_id: employee,
-        start_time: startTime,
-      };
-      onSave({ user_id: employee, start_time: startTime, open_shift: isOpenShift });
-    }
+    const payload = {
+      user_id: employee,
+      start_time: startTime,
+      end_time: includeEndTime && endTime ? endTime : undefined,
+      open_shift: isOpenShift,
+    };
+
+    setShouldRestore(false);
+    onSave(payload);
     onClose(); // Ensure the dialog closes after saving
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={()=>{onClose(),onSave({user_id: ogEmployee, start_time: ogStartTime, open_shift:ogOpen})}}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          if (shouldRestore && shift) {
+            onSave({
+              user_id: ogEmployee,
+              start_time: ogStartTime,
+              end_time: ogEndTime,
+              open_shift: ogOpen,
+            });
+          }
+          onClose();
+          setShouldRestore(true);
+        }
+      }}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Custom Shift</DialogTitle>
@@ -73,7 +102,16 @@ const EditShiftDialog: React.FC<CustomShiftDialogProps> = ({ isOpen, onClose, on
             </SelectContent>
           </Select>
           <div className='flex items-center space-x-2'>
-            <Checkbox id="open_shift" onClick={()=>{isOpenShift===false?setIsOpenShift(true):setIsOpenShift(false)}} checked={isOpenShift}/>
+            <Checkbox
+              id="open_shift"
+              checked={isOpenShift}
+              onCheckedChange={(checked) => {
+                setIsOpenShift(Boolean(checked));
+                if (checked) {
+                  setEmployee('');
+                }
+              }}
+            />
             <Label className=' opacity-75' htmlFor='open_shift'>Select as open shift</Label>
           </div>
           <Label>Select start time</Label>
@@ -83,17 +121,43 @@ const EditShiftDialog: React.FC<CustomShiftDialogProps> = ({ isOpen, onClose, on
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
           />
-          {/*//TODOIf end time is setted by settings, show also end time
-          <Input
-            type="time"
-            placeholder="End Time"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-          />
-          */}
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="include_end_time"
+              checked={includeEndTime}
+              onCheckedChange={(checked) => {
+                const isChecked = Boolean(checked);
+                setIncludeEndTime(isChecked);
+                if (!isChecked) {
+                  setEndTime('');
+                }
+              }}
+            />
+            <Label className="opacity-75" htmlFor="include_end_time">Add end time</Label>
+          </div>
+          {includeEndTime && (
+            <>
+              <Label>Select end time</Label>
+              <Input
+                type="time"
+                placeholder="End Time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                min={startTime}
+              />
+            </>
+          )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={()=>{onClose;handleSave}}>Cancel</Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setShouldRestore(true);
+              onClose();
+            }}
+          >
+            Cancel
+          </Button>
           <Button onClick={handleSave}>Save</Button>
         </DialogFooter>
       </DialogContent>
