@@ -170,7 +170,7 @@ export default function Component(props: SchedulerProps) {
       setDraftShifts(props.shifts)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[employees, props.shifts]);
+  },[props.weekStart,employees, props.shifts]);
   const renderWeekSchedule = () => {
     console.log(draft_shifts)
     return (
