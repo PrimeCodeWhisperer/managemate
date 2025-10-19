@@ -481,6 +481,7 @@ export default function Component(props: SchedulerProps) {
   
   return (
     <div className="space-y-4">
+      {renderWeekSchedule()}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Headcount goals for this week</CardTitle>
@@ -512,7 +513,6 @@ export default function Component(props: SchedulerProps) {
           </p>
         </CardContent>
       </Card>
-      {renderWeekSchedule()}
 
       <EditShiftDialog
         isOpen={isEditShiftDialogOpen}

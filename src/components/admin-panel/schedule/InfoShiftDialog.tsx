@@ -32,7 +32,7 @@ const InfoShiftDialog: React.FC<InfoShiftDialogProps> = ({ isOpen, onClose, shif
             <div className="grid gap-3 py-4">
               <div>
                 <Label>Employee</Label>
-                <p className="text-sm mt-2">{employee?.name}</p>
+                <p className="text-sm mt-2">{employee?.username}</p>
               </div>
               <div>
                 <Label>Date</Label>
