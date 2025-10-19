@@ -144,15 +144,15 @@ export default function HomePage() {
           </section> */}
           <section
             id="contact"
-            className="mx-auto max-w-[980px] py-12 md:py-24"
+            className="mx-auto max-w-[980px] py-12 md:py-24 flex flex-col items-center"
           >
-            <h2 className="text-center text-3xl font-bold mb-8">Get in touch</h2>
-            <p className="text-center text-muted-foreground">
-              Placeholder for contact information or a contact form. Include an
-              email address or form here.
+            <h2 className="text-center text-3xl font-bold mb-4">Get in touch</h2>
+            <p className="text-center text-muted-foreground mb-4">
+              Schedule a free 10-minutes call with us
             </p>
+            <Button  disabled>Unavailable At The Moment</Button>
           </section>
-          <section
+          {/* <section
             id="cta"
             className="mx-auto max-w-[980px] py-12 md:py-24 text-center"
           >
@@ -168,7 +168,7 @@ export default function HomePage() {
                 <ArrowRightIcon className="ml-2" />
               </Link>
             </Button>
-          </section>
+          </section> */}
         </div>
       </main>
       <footer className="py-6 md:py-0 border-t border-border/40">
