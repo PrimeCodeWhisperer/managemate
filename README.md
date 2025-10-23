@@ -186,7 +186,3 @@ Create a `.env.local` file in the project root with the following values:
 - **Publishing fails**: Ensure the Supabase service role key is set server-side and the `upcoming_shifts`, `open_shifts`, and `week_shifts` tables are writeable by the service role.
 - **Email sending errors**: Gmail requires an app-specific password when 2FA is enabled. For other providers, update the nodemailer transport in `src/app/api/send-email/route.ts`.
 - **Stale employee data**: The Supabase context caches responses in `localStorage`. Call the *Clear cache* action or clear browser storage if roles or accounts change.
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
