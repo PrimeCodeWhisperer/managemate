@@ -2,13 +2,12 @@ import {
   Tag,
   Users,
   Settings,
-  Bookmark,
-  SquarePen,
   LayoutGrid,
   LucideIcon,
   Calendar,
   Clock,
-  Palmtree
+  Palmtree,
+  CheckCheck
 } from "lucide-react";
 
 type Submenu = {
@@ -55,6 +54,13 @@ export function getMenuList(pathname: string): Group[] {
           submenus: []
         },
         {
+          href: "/approval",
+          label: "Shift Approval",
+          active: pathname.includes("/approval"),
+          icon: CheckCheck,
+          submenus: []
+        },
+        {
           href: "/timesheet",
           label: "Timesheet",
           active: pathname.includes("/timesheet"),
@@ -68,18 +74,18 @@ export function getMenuList(pathname: string): Group[] {
           icon: Palmtree,
           submenus: []
         },
-      ]
-    },
-    {
-      groupLabel: "Settings",
-      menus: [
         {
           href: "/employees",
           label: "Employees",
           active: pathname.includes("/employees"),
           icon: Users,
           submenus: []
-        },
+        }
+      ]
+    },
+    {
+      groupLabel: "Settings",
+      menus: [
         {
           href: "/account",
           label: "Account",
