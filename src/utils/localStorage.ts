@@ -4,8 +4,10 @@
 export const clearAppCache = () => {
   const keysToRemove = [
     'employees',
-    'userData', 
-    'cacheVersion'
+    'userData',
+    'companyData',
+    'cacheVersion',
+    'lastUpdate'
   ];
 
   keysToRemove.forEach(key => {

@@ -1,15 +1,18 @@
 'use client'
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { createClient } from '../utils/supabase/client';
-import { Employee, User } from '@/lib/definitions';
+import { Employee, User, Company } from '@/lib/definitions';
 import { fetchEmployees, getUser } from '@/utils/api';
 import { clearAppCache } from '@/utils/localStorage';
+
+const CACHE_REFRESH_INTERVAL = 6 * 60 * 60 * 1000; // 6 hours
 
 const supabase = createClient();
 
 // Define the shape of the context
 interface SupabaseDataContextType {
   data: User | undefined;
+  company: Company | undefined;
   employees: Employee[] | undefined;
   loading: boolean;
   error: string | null;
@@ -22,94 +25,105 @@ const SupabaseDataContext = createContext<SupabaseDataContextType | undefined>(u
 // Provider component
 export const SupabaseDataProvider = ({ children }: { children: ReactNode }) => {
   const [data, setData] = useState<User | undefined>();
+  const [company, setCompany] = useState<Company | undefined>();
   const [employees, setEmployees] = useState<Employee[] | undefined>();
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const clearCache = () => {
-    clearAppCache();
-    // Reset state to undefined to trigger fresh fetch
-    setEmployees(undefined);
-    setData(undefined);;
-  };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        // Add cache version to invalidate when Employee type changes
-        const CACHE_VERSION = '2.0'; 
-        const cachedVersion = localStorage.getItem('cacheVersion');
+  const CACHE_VERSION = '3.0';
 
-        if (cachedVersion !== CACHE_VERSION) {
-          localStorage.removeItem('employees');
-          localStorage.removeItem('userData');
-          localStorage.setItem('cacheVersion', CACHE_VERSION);
-          console.log('Cache cleared due to version mismatch');
+  const fetchData = useCallback(async (forceRefresh = false) => {
+    setLoading(true);
+    try {
+      const cachedVersion = localStorage.getItem('cacheVersion');
+      if (cachedVersion !== CACHE_VERSION) {
+        clearAppCache();
+        localStorage.setItem('cacheVersion', CACHE_VERSION);
+      }
+
+      const lastUpdate = Number(localStorage.getItem('lastUpdate') || 0);
+      const shouldRefresh = forceRefresh || Date.now() - lastUpdate > CACHE_REFRESH_INTERVAL;
+
+      let employeesData: Employee[] | undefined;
+      let userData: User | undefined;
+      let companyData: Company | undefined;
+
+      if (!shouldRefresh) {
+        try {
+          const cachedEmployees = localStorage.getItem('employees');
+          const cachedUser = localStorage.getItem('userData');
+          const cachedCompany = localStorage.getItem('companyData');
+          if (cachedEmployees) employeesData = JSON.parse(cachedEmployees);
+          if (cachedUser) userData = JSON.parse(cachedUser);
+          if (cachedCompany) companyData = JSON.parse(cachedCompany);
+        } catch {
+          clearAppCache();
         }
+      }
 
-        const cachedEmployees = localStorage.getItem('employees');
-        const cachedUser = localStorage.getItem('userData');
-
-        let employeesData: Employee[] | undefined;
-        let userData: User | undefined;
-        if (cachedEmployees && cachedVersion === CACHE_VERSION) {
-          try {
-            employeesData = JSON.parse(cachedEmployees);
-            console.log('Using cached employees');
-          } catch (parseError) {
-            console.error('Error parsing cached employees:', parseError);
-            localStorage.removeItem('employees');
+      if (!userData || !companyData || !employeesData || shouldRefresh) {
+        const currentUser = (await supabase.auth.getUser()).data.user;
+        if (currentUser?.id) {
+          userData = await getUser(currentUser.id);
+          if (userData?.role === 'admin') {
+            companyData = userData.company;
+            if (companyData?.id) {
+              employeesData = await fetchEmployees(companyData.id);
+            }
+          } else {
+            localStorage.clear();
+            supabase.auth.signOut();
+            userData = undefined;
+            companyData = undefined;
             employeesData = undefined;
           }
         }
-        if (cachedUser && cachedVersion === CACHE_VERSION) {
-          try {
-            userData=JSON.parse(cachedUser);
-            console.log('Using cached user');
-          } catch (parseError) {
-            console.error('Error parsing cached user:', parseError);
-            localStorage.removeItem('userData');
-            userData = undefined;
-          }
-        }
 
-        // If no valid cached data, fetch fresh
-        if (!employeesData) {
-          console.log('Fetching fresh employees data');
-          employeesData = await fetchEmployees();
-          if (employeesData) {
-            localStorage.setItem('employees', JSON.stringify(employeesData));
-          }
-        }
-        
-        if(!userData){
-          const currentUser=(await supabase.auth.getUser()).data.user;
-          console.log(currentUser?.id)
-          userData = await getUser(currentUser?.id);
-          console.log(userData)
-          if (userData) {
-            localStorage.setItem('userData', JSON.stringify(userData));
-          }
-        }
-          if(userData?.role!=="admin"){
-            localStorage.clear()
-            supabase.auth.signOut()
-          }
-
-        setEmployees(employeesData);
-        setData(userData)
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+        if (userData) localStorage.setItem('userData', JSON.stringify(userData));
+        if (companyData) localStorage.setItem('companyData', JSON.stringify(companyData));
+        if (employeesData) localStorage.setItem('employees', JSON.stringify(employeesData));
+        localStorage.setItem('lastUpdate', Date.now().toString());
       }
+
+      setData(userData);
+      setCompany(companyData);
+      setEmployees(employeesData);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+    }, []);
+
+  const clearCache = useCallback(() => {
+    clearAppCache();
+    localStorage.removeItem('lastUpdate');
+    setEmployees(undefined);
+    setData(undefined);
+    setCompany(undefined);
+    fetchData(true);
+  }, [fetchData]);
+
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const scheduleRefresh = () => {
+      const last = Number(localStorage.getItem('lastUpdate') || 0);
+      const delay = Math.max(CACHE_REFRESH_INTERVAL - (Date.now() - last), 0);
+      timeoutId = setTimeout(async () => {
+        await fetchData(true);
+        scheduleRefresh();
+      }, delay);
     };
 
     fetchData();
-  }, []);
+    scheduleRefresh();
+
+    return () => clearTimeout(timeoutId);
+  }, [fetchData]);
 
   return (
-    <SupabaseDataContext.Provider value={{ data, employees, loading, error,clearCache }}>
+    <SupabaseDataContext.Provider value={{ data, company, employees, loading, error, clearCache }}>
       {children}
     </SupabaseDataContext.Provider>
   );

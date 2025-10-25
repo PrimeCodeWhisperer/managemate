@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { fetchPendingEmployees } from "@/utils/api";
+import { useSupabaseData } from '@/contexts/SupabaseContext';
 
 
 export function AddEmployeeDialog({ onPendingRefresh }: { onPendingRefresh?: (pending: any[]) => void }) {
@@ -25,6 +26,7 @@ export function AddEmployeeDialog({ onPendingRefresh }: { onPendingRefresh?: (pe
   const [submitting, setSubmitting] = useState(false);
 
   const router = useRouter();
+  const { company } = useSupabaseData();
 
   const reset = () => {
     setUsername("");
@@ -54,10 +56,10 @@ export function AddEmployeeDialog({ onPendingRefresh }: { onPendingRefresh?: (pe
       });
       if (!res.ok) throw new Error("Failed");
       setOtpSent(true);
-      if (onPendingRefresh) {
+      if (onPendingRefresh && company?.id) {
         try {
-          const pending = await fetchPendingEmployees();
-            onPendingRefresh(pending);
+          const pending = await fetchPendingEmployees(company.id);
+          onPendingRefresh(pending);
         } catch {
           /* ignore */
         }
