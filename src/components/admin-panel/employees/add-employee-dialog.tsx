@@ -81,7 +81,7 @@ export function AddEmployeeDialog({ onPendingRefresh }: { onPendingRefresh?: (pe
         />
       </div>
       <div className="grid gap-1">
-        <Label>Username</Label>
+        <Label>Full Name</Label>
         <Input
           type="text"
           placeholder="Username"

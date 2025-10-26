@@ -50,7 +50,7 @@ const CustomShiftDialog: React.FC<CustomShiftDialogProps> = ({ isOpen, onClose, 
             <SelectContent>
               {employees?.map((emp) => (
                 <SelectItem key={emp.id} value={emp.id.toString()}>
-                  {emp.username}
+                  {emp.first_name} {emp.last_name}
                 </SelectItem>
               ))}
             </SelectContent>

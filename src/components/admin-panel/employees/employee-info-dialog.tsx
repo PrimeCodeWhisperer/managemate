@@ -45,11 +45,11 @@ export function EmployeeInfoDialog({ employee }: { employee: Employee }) {
                 </DialogHeader>
                 <div className="flex items-center gap-4 py-4">
                     <Avatar>
-                        <AvatarImage alt={employee.username} />
-                        <AvatarFallback>{employee.username[0]}</AvatarFallback>
+                        <AvatarImage alt={`${employee.first_name} ${employee.last_name}`} />
+                        <AvatarFallback>{employee.first_name[0]}</AvatarFallback>
                     </Avatar>
                     <div>
-                        <h3 className="font-semibold">{employee.username}</h3>
+                        <h3 className="font-semibold">{employee.first_name} {employee.last_name}</h3>
                         <p className="text-sm text-muted-foreground">Waiter</p>
                     </div>
                 </div>

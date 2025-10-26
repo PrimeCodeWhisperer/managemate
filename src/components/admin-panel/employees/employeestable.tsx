@@ -108,7 +108,6 @@ export default function ProfilesPage() {
           <TableHeader>
             <TableRow>
               <TableHead></TableHead>
-              <TableHead>Username</TableHead>
               <TableHead>Full Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Actions</TableHead>
@@ -124,7 +123,6 @@ export default function ProfilesPage() {
                       <AvatarFallback className="bg-transparent">{`${profile.first_name[0]}${profile.last_name[0]}`}</AvatarFallback>
                     </Avatar>
                   </TableCell>
-                  <TableCell>{profile.username}</TableCell>
                   <TableCell>{`${profile.first_name} ${profile.last_name}`}</TableCell>
                   <TableCell>{profile.email}</TableCell>
                   <TableCell className="flex gap-2">
