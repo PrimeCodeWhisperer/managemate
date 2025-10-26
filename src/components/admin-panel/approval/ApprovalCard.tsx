@@ -13,10 +13,10 @@ import { fetchPastShifts, updateShiftStatus, updateShiftTimes } from '@/utils/su
 import { Shift } from '@/lib/definitions'
 import WeekNavigator from '../WeekNavigator'
 import { toast } from 'sonner'
+import { useSupabaseData } from '@/contexts/SupabaseContext'
 
 interface PastShift extends Shift {
   end_time: string;
-  user_id: string;
 }
 
 export default function ApprovalCard() {
@@ -32,6 +32,7 @@ export default function ApprovalCard() {
   const [modifiedStartTime, setModifiedStartTime] = useState('')
   const [modifiedEndTime, setModifiedEndTime] = useState('')
   const [isUpdating, setIsUpdating] = useState<number | null>(null)
+  const { employees } = useSupabaseData()
 
   useEffect(() => {
     const loadPastShifts = async () => {
@@ -85,29 +86,6 @@ export default function ApprovalCard() {
     } catch (error) {
       console.error('Error approving shift:', error)
       toast.error('Failed to approve shift')
-    } finally {
-      setIsUpdating(null)
-    }
-  }
-
-  const handleReject = async (shift: PastShift) => {
-    if (!shift.id) {
-      toast.error('Invalid shift ID')
-      return
-    }
-
-    setIsUpdating(shift.id)
-    try {
-      await updateShiftStatus(shift.id, 'rejected')
-      
-      // Update local state
-      setPastShifts(prev => 
-        prev.map(s => s.id === shift.id ? { ...s, status: 'rejected' } : s)
-      )
-      toast.success('Shift rejected')
-    } catch (error) {
-      console.error('Error rejecting shift:', error)
-      toast.error('Failed to reject shift')
     } finally {
       setIsUpdating(null)
     }
@@ -217,7 +195,7 @@ export default function ApprovalCard() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Date</TableHead>
-                    <TableHead>Employee ID</TableHead>
+                    <TableHead>Employee</TableHead>
                     <TableHead>Start Time</TableHead>
                     <TableHead>End Time</TableHead>
                     <TableHead>Duration</TableHead>
@@ -233,13 +211,13 @@ export default function ApprovalCard() {
                     const durationMs = endTime.getTime() - startTime.getTime()
                     const durationHours = Math.round((durationMs / (1000 * 60 * 60)) * 100) / 100
                     const isUpdatingThisShift = isUpdating === shift.id
-
+                    const employee=employees?.find(e=>e.id===shift.user_id)
                     return (
                       <TableRow key={shift.id}>
                         <TableCell className="font-medium">
                           {formatDate(shift.date)}
                         </TableCell>
-                        <TableCell>{shift.user_id}</TableCell>
+                        <TableCell>{`${employee?.first_name} ${employee?.last_name}`}</TableCell>
                         <TableCell>{formatTime(shift.start_time)}</TableCell>
                         <TableCell>{formatTime(shift.end_time)}</TableCell>
                         <TableCell>{durationHours}h</TableCell>
@@ -265,16 +243,6 @@ export default function ApprovalCard() {
                                   Modify & Approve
                                 </Button>
                               </>
-                            )}
-                            {shift.status !== 'rejected' && (
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleReject(shift)}
-                                disabled={isUpdatingThisShift}
-                              >
-                                {isUpdatingThisShift ? 'Rejecting...' : 'Reject'}
-                              </Button>
                             )}
                           </div>
                         </TableCell>

@@ -47,7 +47,7 @@ export async function updateShiftStatus(shiftId: number, status: 'approved' | 'r
   try {
     const { data, error } = await supabase
       .from('past_shifts')
-      .update({ status })
+      .update({ approved:true })
       .eq('id', shiftId)
       .select();
 
@@ -78,7 +78,7 @@ export async function updateShiftTimes(
       .update({ 
         start_time: startTime,
         end_time: endTime,
-        status 
+        approved:true, 
       })
       .eq('id', shiftId)
       .select();
