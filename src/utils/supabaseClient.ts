@@ -84,6 +84,32 @@ export async function fetchShifts(currentWeek: Date): Promise<Shift[] | undefine
     return data;
   }
 }
+export async function fetchPastShifts(currentWeek: Date): Promise<Shift[] | undefined> {
+  const supabase = createClient();
+
+  const startOfThisWeek = startOfWeek(currentWeek, { weekStartsOn: 1 });
+  const endOfThisWeek = endOfWeek(currentWeek, { weekStartsOn: 1 });
+
+  const startWeekString = format(startOfThisWeek, 'yyyy-MM-dd');
+  const endWeekString = format(endOfThisWeek, 'yyyy-MM-dd');
+
+  const query = supabase
+  .from('past_shifts') // Query the upcoming_shifts table
+  .select('*')
+  .gte('date', startWeekString) // Get shifts starting from the beginning of the week
+  .lte('date', endWeekString);   // Up to the end of the week
+
+
+  const { data, error } = await query; // Execute the query
+
+
+  if (error) {
+    console.error('Error fetching shifts:', error);
+    return undefined;
+  } else {
+    return data;
+  }
+}
 export async function fetchOpenShifts(currentWeek: Date): Promise<Shift[] | undefined> {
   const supabase = createClient();
 

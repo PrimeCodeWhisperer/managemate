@@ -10,6 +10,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
+import ApprovalCard from "@/components/admin-panel/approval/ApprovalCard";
 
 export default function VacationsPage() {
   return (
@@ -33,7 +34,7 @@ export default function VacationsPage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <PlaceholderContent />
+      <ApprovalCard />
     </ContentLayout>
   );
 }

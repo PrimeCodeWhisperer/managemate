@@ -4,14 +4,13 @@ import { useEffect, useState } from 'react'
 import { addWeeks, format, startOfWeek } from 'date-fns'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { fetchOpenShifts, fetchShiftInsertion, fetchShifts } from '@/utils/supabaseClient'
-import Scheduler from './Scheduler'
 import { Shift } from '@/lib/definitions'
 import WeekNavigator from '../WeekNavigator'
-export default function ScheduleClient() {
+export default function ApprovalCard() {
   const [currentWeek, setCurrentWeek] = useState(() => {
     const today = new Date()
     const startOfThisWeek = startOfWeek(today, { weekStartsOn: 1 })
-    return addWeeks(startOfThisWeek, 2) // Start 2 weeks ahead
+    return startOfThisWeek // Start 2 weeks ahead
   })
   const [weekPlanned, setWeekPlanned] = useState(false)
   const [shifts, setShifts] = useState<Shift[]>([])
@@ -65,17 +64,15 @@ export default function ScheduleClient() {
       </Card> */}
       <Card>
         <CardHeader>
-          <CardTitle>Schedule for Week of {format(currentWeek, 'MMMM d, yyyy')}</CardTitle>
-          <CardDescription>{weekPlanned?`Week currently planned`:`Week currently unplanned`}</CardDescription>
+          <CardTitle>Approval for Week of {format(currentWeek, 'MMMM d, yyyy')}</CardTitle>
+          <CardDescription>Approve the shifts here</CardDescription>
         </CardHeader>
         <CardContent>
           <WeekNavigator currentWeek={currentWeek} setCurrentWeek={setCurrentWeek} />
           {isLoading ? (
             <p>Loading...</p>
-          ) : weekPlanned ? (
-            <Scheduler weekStart={currentWeek.toISOString()} shifts={shifts} />
           ) : (
-            <Scheduler weekStart={currentWeek.toISOString()} />
+            <></>
           ) }
         </CardContent>
       </Card>
