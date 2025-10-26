@@ -40,6 +40,61 @@ export async function pubblishShifts(draft_shifts:Shift[],weekStart:Date){
   }
 }
 
+// Update shift status (for approval/rejection)
+export async function updateShiftStatus(shiftId: number, status: 'approved' | 'rejected'): Promise<boolean> {
+  const supabase = createClient();
+
+  try {
+    const { data, error } = await supabase
+      .from('past_shifts')
+      .update({ status })
+      .eq('id', shiftId)
+      .select();
+
+    if (error) {
+      console.error('Error updating shift status:', error);
+      throw error;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Unexpected error updating shift status:', error);
+    throw error;
+  }
+}
+
+// Update shift times and status (for modify and approve)
+export async function updateShiftTimes(
+  shiftId: number, 
+  startTime: string, 
+  endTime: string, 
+  status: 'approved' = 'approved'
+): Promise<boolean> {
+  const supabase = createClient();
+
+  try {
+    const { data, error } = await supabase
+      .from('past_shifts')
+      .update({ 
+        start_time: startTime,
+        end_time: endTime,
+        status 
+      })
+      .eq('id', shiftId)
+      .select();
+
+    if (error) {
+      console.error('Error updating shift times:', error);
+      throw error;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Unexpected error updating shift times:', error);
+    throw error;
+  }
+}
+
 export async function fetchShiftInsertion(currentWeek:Date){
   const supabase = createClient();
 
@@ -94,7 +149,7 @@ export async function fetchPastShifts(currentWeek: Date): Promise<Shift[] | unde
   const endWeekString = format(endOfThisWeek, 'yyyy-MM-dd');
 
   const query = supabase
-  .from('past_shifts') // Query the upcoming_shifts table
+  .from('past_shifts') // Query the past_shifts table
   .select('*')
   .gte('date', startWeekString) // Get shifts starting from the beginning of the week
   .lte('date', endWeekString);   // Up to the end of the week
