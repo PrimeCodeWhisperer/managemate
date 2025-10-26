@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { fetchPastShifts } from '@/utils/supabaseClient'
+import { fetchPastShifts, updateShiftStatus, updateShiftTimes } from '@/utils/supabaseClient'
 import { Shift } from '@/lib/definitions'
 import WeekNavigator from '../WeekNavigator'
 import { toast } from 'sonner'
@@ -31,6 +31,7 @@ export default function ApprovalCard() {
   const [modifyDialogOpen, setModifyDialogOpen] = useState(false)
   const [modifiedStartTime, setModifiedStartTime] = useState('')
   const [modifiedEndTime, setModifiedEndTime] = useState('')
+  const [isUpdating, setIsUpdating] = useState<number | null>(null)
 
   useEffect(() => {
     const loadPastShifts = async () => {
@@ -67,9 +68,14 @@ export default function ApprovalCard() {
   }, [currentWeek])
 
   const handleApprove = async (shift: PastShift) => {
+    if (!shift.id) {
+      toast.error('Invalid shift ID')
+      return
+    }
+
+    setIsUpdating(shift.id)
     try {
-      // TODO: Implement API call to update shift status to 'approved'
-      // await updateShiftStatus(shift.id, 'approved')
+      await updateShiftStatus(shift.id, 'approved')
       
       // Update local state
       setPastShifts(prev => 
@@ -79,13 +85,20 @@ export default function ApprovalCard() {
     } catch (error) {
       console.error('Error approving shift:', error)
       toast.error('Failed to approve shift')
+    } finally {
+      setIsUpdating(null)
     }
   }
 
   const handleReject = async (shift: PastShift) => {
+    if (!shift.id) {
+      toast.error('Invalid shift ID')
+      return
+    }
+
+    setIsUpdating(shift.id)
     try {
-      // TODO: Implement API call to update shift status to 'rejected'
-      // await updateShiftStatus(shift.id, 'rejected')
+      await updateShiftStatus(shift.id, 'rejected')
       
       // Update local state
       setPastShifts(prev => 
@@ -95,6 +108,8 @@ export default function ApprovalCard() {
     } catch (error) {
       console.error('Error rejecting shift:', error)
       toast.error('Failed to reject shift')
+    } finally {
+      setIsUpdating(null)
     }
   }
 
@@ -106,11 +121,28 @@ export default function ApprovalCard() {
   }
 
   const handleModifyTimeSubmit = async () => {
-    if (!selectedShift) return
+    if (!selectedShift || !selectedShift.id) {
+      toast.error('Invalid shift selected')
+      return
+    }
 
+    // Validate time inputs
+    if (!modifiedStartTime || !modifiedEndTime) {
+      toast.error('Please provide both start and end times')
+      return
+    }
+
+    // Check if end time is after start time
+    const startTime = new Date(`2000-01-01T${modifiedStartTime}`)
+    const endTime = new Date(`2000-01-01T${modifiedEndTime}`)
+    if (endTime <= startTime) {
+      toast.error('End time must be after start time')
+      return
+    }
+
+    setIsUpdating(selectedShift.id)
     try {
-      // TODO: Implement API call to update shift times and approve
-      // await updateShiftTimes(selectedShift.id, modifiedStartTime, modifiedEndTime, 'approved')
+      await updateShiftTimes(selectedShift.id, modifiedStartTime, modifiedEndTime, 'approved')
       
       // Update local state
       setPastShifts(prev => 
@@ -128,6 +160,8 @@ export default function ApprovalCard() {
     } catch (error) {
       console.error('Error updating shift times:', error)
       toast.error('Failed to update shift times')
+    } finally {
+      setIsUpdating(null)
     }
   }
 
@@ -198,6 +232,7 @@ export default function ApprovalCard() {
                     const endTime = new Date(`2000-01-01T${shift.end_time}`)
                     const durationMs = endTime.getTime() - startTime.getTime()
                     const durationHours = Math.round((durationMs / (1000 * 60 * 60)) * 100) / 100
+                    const isUpdatingThisShift = isUpdating === shift.id
 
                     return (
                       <TableRow key={shift.id}>
@@ -216,14 +251,16 @@ export default function ApprovalCard() {
                                 <Button
                                   size="sm"
                                   onClick={() => handleApprove(shift)}
+                                  disabled={isUpdatingThisShift}
                                   className="bg-green-500 hover:bg-green-600"
                                 >
-                                  Approve
+                                  {isUpdatingThisShift ? 'Approving...' : 'Approve'}
                                 </Button>
                                 <Button
                                   size="sm"
                                   variant="outline"
                                   onClick={() => handleModifyTimeOpen(shift)}
+                                  disabled={isUpdatingThisShift}
                                 >
                                   Modify & Approve
                                 </Button>
@@ -234,8 +271,9 @@ export default function ApprovalCard() {
                                 size="sm"
                                 variant="destructive"
                                 onClick={() => handleReject(shift)}
+                                disabled={isUpdatingThisShift}
                               >
-                                Reject
+                                {isUpdatingThisShift ? 'Rejecting...' : 'Reject'}
                               </Button>
                             )}
                           </div>
@@ -286,8 +324,12 @@ export default function ApprovalCard() {
             <Button variant="outline" onClick={() => setModifyDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleModifyTimeSubmit} className="bg-green-500 hover:bg-green-600">
-              Update & Approve
+            <Button 
+              onClick={handleModifyTimeSubmit} 
+              disabled={selectedShift ? isUpdating === selectedShift.id : false}
+              className="bg-green-500 hover:bg-green-600"
+            >
+              {selectedShift && isUpdating === selectedShift.id ? 'Updating...' : 'Update & Approve'}
             </Button>
           </div>
         </DialogContent>
