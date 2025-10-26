@@ -34,7 +34,6 @@ const generateMonthOptions = () => {
   const options: { value: string; label: string }[] = []
   let cursor = new Date()
 
-  cursor = addMonths(cursor, -1)
   for (let i = 0; i < MONTH_COUNT; i += 1) {
     options.push({
       value: format(cursor, "yyyy-MM"),

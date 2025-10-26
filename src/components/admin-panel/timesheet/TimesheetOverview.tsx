@@ -28,7 +28,7 @@ const MONTH_COUNT = 12
 
 const generateMonthOptions = (): MonthOption[] => {
   const options: MonthOption[] = []
-  let cursor = subMonths(new Date(), 1)
+  let cursor = new Date
 
   for (let i = 0; i < MONTH_COUNT; i += 1) {
     options.push({

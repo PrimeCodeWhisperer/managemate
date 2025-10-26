@@ -1,14 +1,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { addWeeks, format, startOfWeek } from 'date-fns'
+import { format, startOfWeek, parseISO, isSameDay } from 'date-fns'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
 import { fetchPastShifts, updateShiftStatus, updateShiftTimes } from '@/utils/supabaseClient'
 import { Shift } from '@/lib/definitions'
 import WeekNavigator from '../WeekNavigator'
@@ -17,6 +18,11 @@ import { useSupabaseData } from '@/contexts/SupabaseContext'
 
 interface PastShift extends Shift {
   end_time: string;
+  approved:boolean;
+}
+
+interface GroupedShifts {
+  [date: string]: PastShift[];
 }
 
 export default function ApprovalCard() {
@@ -26,6 +32,7 @@ export default function ApprovalCard() {
     return startOfThisWeek
   })
   const [pastShifts, setPastShifts] = useState<PastShift[]>([])
+  const [groupedShifts, setGroupedShifts] = useState<GroupedShifts>({})
   const [isLoading, setIsLoading] = useState(false)
   const [selectedShift, setSelectedShift] = useState<PastShift | null>(null)
   const [modifyDialogOpen, setModifyDialogOpen] = useState(false)
@@ -33,6 +40,25 @@ export default function ApprovalCard() {
   const [modifiedEndTime, setModifiedEndTime] = useState('')
   const [isUpdating, setIsUpdating] = useState<number | null>(null)
   const { employees } = useSupabaseData()
+
+  // Group shifts by date whenever pastShifts changes
+  useEffect(() => {
+    const grouped = pastShifts.reduce((acc: GroupedShifts, shift) => {
+      const dateKey = shift.date
+      if (!acc[dateKey]) {
+        acc[dateKey] = []
+      }
+      acc[dateKey].push(shift)
+      return acc
+    }, {})
+
+    // Sort shifts within each date by start time
+    Object.keys(grouped).forEach(date => {
+      grouped[date].sort((a, b) => a.start_time.localeCompare(b.start_time))
+    })
+
+    setGroupedShifts(grouped)
+  }, [pastShifts])
 
   useEffect(() => {
     const loadPastShifts = async () => {
@@ -48,10 +74,6 @@ export default function ApprovalCard() {
               shift.start_time != null &&
               shift.date != null
             )
-            .map(shift => ({
-              ...shift,
-              status: shift.status || 'pending' // Default to pending if no status
-            }))
           setPastShifts(typedShifts)
         } else {
           setPastShifts([])
@@ -80,7 +102,7 @@ export default function ApprovalCard() {
       
       // Update local state
       setPastShifts(prev => 
-        prev.map(s => s.id === shift.id ? { ...s, status: 'approved' } : s)
+        prev.map(s => s.id === shift.id ? { ...s, approved: true } : s)
       )
       toast.success('Shift approved successfully')
     } catch (error) {
@@ -128,7 +150,7 @@ export default function ApprovalCard() {
           ...s,
           start_time: modifiedStartTime,
           end_time: modifiedEndTime,
-          status: 'approved'
+          approved: true
         } : s)
       )
       
@@ -143,13 +165,10 @@ export default function ApprovalCard() {
     }
   }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'approved':
+  const getStatusBadge = (approved: boolean) => {
+    switch (approved) {
+      case true:
         return <Badge variant="default" className="bg-green-500 hover:bg-green-600">Approved</Badge>
-      case 'rejected':
-        return <Badge variant="destructive">Rejected</Badge>
-      case 'pending':
       default:
         return <Badge variant="secondary" className="bg-yellow-500 hover:bg-yellow-600 text-white">Pending</Badge>
     }
@@ -163,13 +182,23 @@ export default function ApprovalCard() {
     }
   }
 
-  const formatDate = (dateString: string) => {
+  const formatDateHeader = (dateString: string) => {
     try {
-      return format(new Date(dateString), 'EEE, MMM d')
+      return format(new Date(dateString), 'EEEE, MMMM d, yyyy')
     } catch {
       return dateString
     }
   }
+
+  const getDateSummary = (shifts: PastShift[]) => {
+    const total = shifts.length
+    const approved = shifts.filter(s => s.approved === true).length
+    const pending = shifts.filter(s => s.approved === false).length
+
+    return { total, approved, pending }
+  }
+
+  const sortedDates = Object.keys(groupedShifts).sort()
 
   return (
     <div className='py-6'>
@@ -190,67 +219,107 @@ export default function ApprovalCard() {
               <p className="text-muted-foreground">No shifts found for this week</p>
             </div>
           ) : (
-            <div className="mt-6">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Employee</TableHead>
-                    <TableHead>Start Time</TableHead>
-                    <TableHead>End Time</TableHead>
-                    <TableHead>Duration</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pastShifts.map((shift) => {
-                    // Calculate duration in hours
-                    const startTime = new Date(`2000-01-01T${shift.start_time}`)
-                    const endTime = new Date(`2000-01-01T${shift.end_time}`)
-                    const durationMs = endTime.getTime() - startTime.getTime()
-                    const durationHours = Math.round((durationMs / (1000 * 60 * 60)) * 100) / 100
-                    const isUpdatingThisShift = isUpdating === shift.id
-                    const employee=employees?.find(e=>e.id===shift.user_id)
-                    return (
-                      <TableRow key={shift.id}>
-                        <TableCell className="font-medium">
-                          {formatDate(shift.date)}
-                        </TableCell>
-                        <TableCell>{`${employee?.first_name} ${employee?.last_name}`}</TableCell>
-                        <TableCell>{formatTime(shift.start_time)}</TableCell>
-                        <TableCell>{formatTime(shift.end_time)}</TableCell>
-                        <TableCell>{durationHours}h</TableCell>
-                        <TableCell>{getStatusBadge(shift.status || 'pending')}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex gap-2 justify-end">
-                            {shift.status !== 'approved' && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleApprove(shift)}
-                                  disabled={isUpdatingThisShift}
-                                  className="bg-green-500 hover:bg-green-600"
-                                >
-                                  {isUpdatingThisShift ? 'Approving...' : 'Approve'}
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleModifyTimeOpen(shift)}
-                                  disabled={isUpdatingThisShift}
-                                >
-                                  Modify & Approve
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
+            <div className="mt-6 space-y-6">
+              {sortedDates.map((date, dateIndex) => {
+                const shiftsForDate = groupedShifts[date]
+                const summary = getDateSummary(shiftsForDate)
+                
+                return (
+                  <div key={date} className="space-y-4">
+                    {/* Date Header with Summary */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold">{formatDateHeader(date)}</h3>
+                        <div className="flex gap-2 mt-1">
+                          <span className="text-sm text-muted-foreground">
+                            {summary.total} shift{summary.total !== 1 ? 's' : ''}
+                          </span>
+                          {summary.pending > 0 && (
+                            <Badge variant="secondary" className="bg-yellow-500 text-white text-xs">
+                              {summary.pending} pending
+                            </Badge>
+                          )}
+                          {summary.approved > 0 && (
+                            <Badge variant="default" className="bg-green-500 text-xs">
+                              {summary.approved} approved
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Shifts Table for this Date */}
+                    <Card className="border-l-4 border-l-black">
+                      <CardContent className="p-0">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Employee</TableHead>
+                              <TableHead>Start Time</TableHead>
+                              <TableHead>End Time</TableHead>
+                              <TableHead>Duration</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {shiftsForDate.map((shift) => {
+                              // Calculate duration in hours
+                              const startTime = new Date(`2000-01-01T${shift.start_time}`)
+                              const endTime = new Date(`2000-01-01T${shift.end_time}`)
+                              const durationMs = endTime.getTime() - startTime.getTime()
+                              const durationHours = Math.round((durationMs / (1000 * 60 * 60)) * 100) / 100
+                              const isUpdatingThisShift = isUpdating === shift.id
+                              const employee = employees?.find(e => e.id === shift.user_id)
+                              
+                              return (
+                                <TableRow key={shift.id}>
+                                  <TableCell className="font-medium">
+                                    {employee ? `${employee.first_name} ${employee.last_name}` : shift.user_id}
+                                  </TableCell>
+                                  <TableCell>{formatTime(shift.start_time)}</TableCell>
+                                  <TableCell>{formatTime(shift.end_time)}</TableCell>
+                                  <TableCell>{durationHours}h</TableCell>
+                                  <TableCell>{getStatusBadge(shift.approved)}</TableCell>
+                                  <TableCell >
+                                    <div className="flex gap-2 justify-end">
+                                      {!shift.approved && (
+                                        <>
+                                          <Button
+                                            size="sm"
+                                            onClick={() => handleApprove(shift)}
+                                            disabled={isUpdatingThisShift}
+                                            className="bg-green-500 hover:bg-green-600"
+                                          >
+                                            {isUpdatingThisShift ? 'Approving...' : 'Approve'}
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleModifyTimeOpen(shift)}
+                                            disabled={isUpdatingThisShift}
+                                          >
+                                            Modify & Approve
+                                          </Button>
+                                        </>
+                                      )}
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              )
+                            })}
+                          </TableBody>
+                        </Table>
+                      </CardContent>
+                    </Card>
+
+                    {/* Add separator between dates except for the last one */}
+                    {dateIndex < sortedDates.length - 1 && (
+                      <Separator className="my-6" />
+                    )}
+                  </div>
+                )
+              })}
             </div>
           )}
         </CardContent>
@@ -297,7 +366,7 @@ export default function ApprovalCard() {
               disabled={selectedShift ? isUpdating === selectedShift.id : false}
               className="bg-green-500 hover:bg-green-600"
             >
-              {selectedShift && isUpdating === selectedShift.id ? 'Updating...' : 'Update & Approve'}
+              {selectedShift && isUpdating === selectedShift.id ? 'Updating..' : 'Update & Approve'}
             </Button>
           </div>
         </DialogContent>
