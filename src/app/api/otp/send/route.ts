@@ -41,8 +41,8 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
-
-  const baseUrl = process.env.PUBLIC_APP_URL || "http://localhost:3000";
+  //TODO: Find out why verced does not recognize the env variable
+  const baseUrl = process.env.PUBLIC_APP_URL || "https://managemate.online";
   const loginUrl = `${baseUrl}/login?email=${encodeURIComponent(user.email ?? email)}`;
   const fromAddress = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
   const supportEmail = process.env.SUPPORT_EMAIL || "support@managemate.online";
