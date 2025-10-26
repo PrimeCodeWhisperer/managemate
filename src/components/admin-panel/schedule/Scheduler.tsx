@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { addDays, format, parseISO, isSameDay, isWithinInterval } from 'date-fns';
+import { addDays, format, parseISO, isSameDay, isWithinInterval, startOfWeek, getWeek, differenceInWeeks, differenceInCalendarWeeks } from 'date-fns';
 import { Availability, Shift, WeekCapacity } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -18,11 +18,12 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { toast } from 'sonner';
 import { mapAvailabilitiesToCandidates, ScheduleSolution } from '@/utils/scheduling/autoScheduler';
 import { Input } from '@/components/ui/input';
-
+//TODO: Ptu availabilities also on dialog when employee is selected
 const WEEK_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 interface SchedulerProps {
   shifts?: Shift[];
   weekStart:string;
+  toggleAvailabilities:boolean;
 }
 
 export default function Component(props: SchedulerProps) {
@@ -30,7 +31,7 @@ export default function Component(props: SchedulerProps) {
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [isAutoScheduling, setIsAutoScheduling] = useState(false);
   const [autoError, setAutoError] = useState<string | null>(null);
-  const [isLoadingAvailabilities, setIsLoadingAvailabilities] = useState(false);
+  const [isLoadingAvailabilities, setIsLoadingAvailabilities] = useState(!props.shifts);
   const { employees } = useSupabaseData();
   const { timeSpans, defaultDailyCapacity } = useSettings();
   const selectedWeek = useMemo(() => parseISO(props.weekStart), [props.weekStart]);
@@ -38,6 +39,8 @@ export default function Component(props: SchedulerProps) {
     () => WEEK_DAYS.map((_, index) => addDays(selectedWeek, index)),
     [selectedWeek],
   );
+  const todaysWeek=startOfWeek(new Date(),{weekStartsOn:1})
+  const weekDifference=differenceInCalendarWeeks(selectedWeek,todaysWeek,{weekStartsOn:1})
   const [isCustomShiftDialogOpen, setIsCustomShiftDialogOpen] = useState(false);
   const [isInfoShiftDialogOpen, setIsInfoShiftDialogOpen] = useState(false);
   const [isEditShiftDialogOpen, setIsEditShiftDialogOpen] = useState(false);
@@ -65,7 +68,7 @@ export default function Component(props: SchedulerProps) {
 
     return { perDay, perSpan };
   }, [selectedWeek, timeSpans, defaultDailyCapacity, weekCapacities]);
-
+  const [openCount, setOpenCount] =useState(0)
   const router=useRouter()
   //function that handles when a change into an already published schedule is made
   //-take new shifts and edited shifts
@@ -76,7 +79,7 @@ export default function Component(props: SchedulerProps) {
     router.push('/publish-schedule-success');
   }
 
-  const handleSaveCustomShift = (shift: { user_id: string; start_time: string; end_time?: string | null; open_shift: boolean }) => {
+  const handleSaveCustomShift = (shift: { user_id: string; start_time: string; end_time?: string | null; open_shift: boolean ;status?:string}) => {
     const baseDate = selectedDate ?? (selectedShift ? new Date(selectedShift.date) : null);
 
     if (!baseDate) {
@@ -91,11 +94,14 @@ export default function Component(props: SchedulerProps) {
     const newShift: Shift = {
       date: format(baseDate, 'yyyy-MM-dd'),
       start_time: shift.start_time,
-      status: shift.open_shift ? 'open' : 'unplanned',
+      status: shift.open_shift ? 'open' : shift.status,
     };
 
     if (!shift.open_shift) {
       newShift.user_id = shift.user_id;
+    }else{
+      setOpenCount(openCount+1)
+      newShift.user_id = `open-${openCount}`
     }
 
     if (shift.end_time) {
@@ -107,12 +113,14 @@ export default function Component(props: SchedulerProps) {
       (newShift.start_time < timeSpans[0].start_time ||
         (newShift.end_time ? newShift.end_time > timeSpans[timeSpans.length - 1].end_time : false))
     ) {
+      //console.log(newShift.start_time)
       toast("Shift out of timespan");
     } else {
       setDraftShifts((shifts) => [...shifts, newShift]);
     }
   };
   const handleShiftDelete = (shiftToDelete: Shift) => {
+    //console.log(shiftToDelete)
     setDraftShifts(prevShifts =>
       prevShifts.filter(shift =>
         !(
@@ -123,6 +131,18 @@ export default function Component(props: SchedulerProps) {
         )
       )
     );
+  };
+  const handleShiftApproval = (shiftToApprove: Shift) => {
+    //console.log(shiftToApprove)
+    handleShiftDelete(shiftToApprove)
+    const newShift: Shift = {
+      user_id:shiftToApprove.user_id,
+      date: shiftToApprove.date,
+      start_time: shiftToApprove.start_time,
+      end_time:shiftToApprove.end_time,
+      status: 'unplanned',
+    };
+    setDraftShifts((shifts) => [...shifts, newShift]);
   };
   // When this item is clicked, close the dropdown and then open the dialog.
   const buildAvailabilityPlaceholders = useCallback((records: Availability[]): Shift[] => {
@@ -215,10 +235,6 @@ export default function Component(props: SchedulerProps) {
     setAutoError(null);
 
     try {
-      console.log('Auto scheduling started', {
-        weekStart: format(selectedWeek, 'yyyy-MM-dd'),
-      });
-
       const candidates = mapAvailabilitiesToCandidates(availabilities, days_objs, timeSpans);
       if (!candidates.length) {
         toast.error('No candidates matched the current availability and time spans.');
@@ -265,6 +281,7 @@ export default function Component(props: SchedulerProps) {
               start_time: gap.start_time,
               end_time: gap.end_time,
               status: 'open',
+              user_id:`open-${openShifts.length+1}`
             });
           });
         }
@@ -275,11 +292,13 @@ export default function Component(props: SchedulerProps) {
             start_time: span.start_time,
             end_time: span.end_time,
             status: 'open',
+            user_id:`open-${openShifts.length+1}`
           });
         }
       });
-
-      console.log('Auto scheduling completed', solution);
+      setOpenCount(openShifts.length+openCount)
+      //console.log(openCount)
+      //console.log('Auto scheduling completed', solution);
 
       setDraftShifts([...assignments, ...openShifts]);
       toast.success('Auto schedule generated.');
@@ -296,13 +315,6 @@ export default function Component(props: SchedulerProps) {
 
   useEffect(() => {
     if (!employees) {
-      return;
-    }
-
-    if (props.shifts) {
-      setAvailabilities([]);
-      setDraftShifts(props.shifts);
-      setIsLoadingAvailabilities(false);
       return;
     }
 
@@ -338,7 +350,7 @@ export default function Component(props: SchedulerProps) {
 
           setAvailabilities(availabilityList);
           const placeholders = buildAvailabilityPlaceholders(availabilityList);
-          setDraftShifts(placeholders);
+          setDraftShifts([...props.shifts||[],...placeholders]);
           setAutoError(null);
         }
       } catch (err) {
@@ -374,7 +386,7 @@ export default function Component(props: SchedulerProps) {
                 <div  >
                   {format(day,'EEE d')}
                 </div>
-                {!props.shifts&&(
+                {weekDifference>=0&&(
                   <Button size='sm' onClick={()=>{setSelectedDate(day),setIsCustomShiftDialogOpen(true)}}>+</Button>
                 )}
               </div>
@@ -403,6 +415,9 @@ export default function Component(props: SchedulerProps) {
                           shift.status === 'open'
                             ? 'Open shift'
                             : employee?.username ?? 'Unassigned';
+                        if (shift.status==='availability' && props.toggleAvailabilities===false){
+                          return;
+                        } else{
                         return (
                           <DropdownMenu key={`${shift.user_id}-${dayIndex}-${span.id}-${index}`} >
                             <DropdownMenuTrigger asChild className='w-full'>
@@ -431,7 +446,7 @@ export default function Component(props: SchedulerProps) {
                               </div>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                              {props.shifts?(
+                              {weekDifference<0?(
                                 <>
                                   <DropdownMenuItem onClick={() => {
                                     setSelectedShift(shift);
@@ -440,9 +455,9 @@ export default function Component(props: SchedulerProps) {
                                       setIsInfoShiftDialogOpen(true);
                                     }, 100);
                                   }}>Info</DropdownMenuItem>
-                                  <DropdownMenuItem>Change time</DropdownMenuItem>
+                                  {/* <DropdownMenuItem>Change time</DropdownMenuItem> */}
                                 </>
-                              ):(
+                              ):shift.status!=='availability'?(
                                 <>
                                   <DropdownMenuItem onClick={()=>{
                                     setSelectedShift(shift);
@@ -455,11 +470,26 @@ export default function Component(props: SchedulerProps) {
                                     }}>Edit</DropdownMenuItem>
                                   <DropdownMenuItem onClick={()=>handleShiftDelete(shift)}>Delete</DropdownMenuItem>
                                 </>
+                              ):(
+                                                                <>
+                                  <DropdownMenuItem onClick={()=>{handleShiftApproval(shift)}}>Accept</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={()=>{
+                                                                        setSelectedShift(shift);
+                                    handleShiftDelete(shift)
+                                    // Delay to ensure dropdown closes and cleans up before dialog opens
+                                    setTimeout(() => {
+                                      setIsEditShiftDialogOpen(true);
+                                    }, 100);
+
+                                  }}>Accept and Edit</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={()=>handleShiftDelete(shift)}>Delete</DropdownMenuItem>
+                                </>
+
                               )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                           
-                        );
+                        );}
                       })}
                     </div>
                   );
@@ -477,7 +507,8 @@ export default function Component(props: SchedulerProps) {
     isLoadingAvailabilities ||
     !employees?.length ||
     !timeSpans.length ||
-    !availabilities.length;
+    !availabilities.length ||
+    !props.toggleAvailabilities;
   
   return (
     <div className="space-y-4">
@@ -534,7 +565,7 @@ export default function Component(props: SchedulerProps) {
         shift={selectedShift}
         employee={employees?.find(emp=>emp.id===selectedShift?.user_id)}
       />
-      {!props.shifts && (
+      {weekDifference>=0 && (
         <>
           <div className="flex justify-end gap-2 mt-4">
             <Button

@@ -79,7 +79,7 @@ export async function DELETE(request: Request) {
   if (!existingRecord) {
     return NextResponse.json({ error: "Time span not found" }, { status: 404 });
   }
-  console.log('DELETE - Found existing record:', existingRecord);
+  //console.log('DELETE - Found existing record:', existingRecord);
 
   const { data, error, count } = await supabase
     .from("time_spans")
@@ -87,9 +87,9 @@ export async function DELETE(request: Request) {
     .eq("id", id)
     .select(); // Add select to see what was deleted
 
-  console.log('DELETE - Result data:', data);
-  console.log('DELETE - Result error:', error);
-  console.log('DELETE - Result count:', count);
+  //console.log('DELETE - Result data:', data);
+  //console.log('DELETE - Result error:', error);
+  //console.log('DELETE - Result count:', count);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -44,7 +44,7 @@ export const SupabaseDataProvider = ({ children }: { children: ReactNode }) => {
           localStorage.removeItem('employees');
           localStorage.removeItem('userData');
           localStorage.setItem('cacheVersion', CACHE_VERSION);
-          console.log('Cache cleared due to version mismatch');
+          //console.log('Cache cleared due to version mismatch');
         }
 
         const cachedEmployees = localStorage.getItem('employees');
@@ -55,7 +55,7 @@ export const SupabaseDataProvider = ({ children }: { children: ReactNode }) => {
         if (cachedEmployees && cachedVersion === CACHE_VERSION) {
           try {
             employeesData = JSON.parse(cachedEmployees);
-            console.log('Using cached employees');
+            //console.log('Using cached employees');
           } catch (parseError) {
             console.error('Error parsing cached employees:', parseError);
             localStorage.removeItem('employees');
@@ -65,7 +65,7 @@ export const SupabaseDataProvider = ({ children }: { children: ReactNode }) => {
         if (cachedUser && cachedVersion === CACHE_VERSION) {
           try {
             userData=JSON.parse(cachedUser);
-            console.log('Using cached user');
+            //console.log('Using cached user');
           } catch (parseError) {
             console.error('Error parsing cached user:', parseError);
             localStorage.removeItem('userData');
@@ -75,7 +75,7 @@ export const SupabaseDataProvider = ({ children }: { children: ReactNode }) => {
 
         // If no valid cached data, fetch fresh
         if (!employeesData) {
-          console.log('Fetching fresh employees data');
+          //console.log('Fetching fresh employees data');
           employeesData = await fetchEmployees();
           if (employeesData) {
             localStorage.setItem('employees', JSON.stringify(employeesData));
@@ -84,9 +84,9 @@ export const SupabaseDataProvider = ({ children }: { children: ReactNode }) => {
         
         if(!userData){
           const currentUser=(await supabase.auth.getUser()).data.user;
-          console.log(currentUser?.id)
+          //console.log(currentUser?.id)
           userData = await getUser(currentUser?.id);
-          console.log(userData)
+          //console.log(userData)
           if (userData) {
             localStorage.setItem('userData', JSON.stringify(userData));
           }

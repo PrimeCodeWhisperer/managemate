@@ -1,12 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { addWeeks, format, startOfWeek } from 'date-fns'
+import { addWeeks, differenceInCalendarWeeks, format, startOfWeek } from 'date-fns'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { fetchOpenShifts, fetchShiftInsertion, fetchShifts } from '@/utils/supabaseClient'
 import Scheduler from './Scheduler'
 import { Shift } from '@/lib/definitions'
 import WeekNavigator from '../WeekNavigator'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 export default function ScheduleClient() {
   const [currentWeek, setCurrentWeek] = useState(() => {
     const today = new Date()
@@ -16,10 +18,17 @@ export default function ScheduleClient() {
   const [weekPlanned, setWeekPlanned] = useState(false)
   const [shifts, setShifts] = useState<Shift[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [toggleAvailabilities,setToggleAvailabilities] = useState(false)
+  const [weekDifference,setWeekDifference] = useState(2)
   useEffect(() => {
     const checkShiftInserted = async () => {
       const shiftInserted = await fetchShiftInsertion(currentWeek)
       setWeekPlanned(shiftInserted)
+      const todaysWeek=startOfWeek(new Date(),{weekStartsOn:1})
+      const weekDifference=differenceInCalendarWeeks(currentWeek,todaysWeek,{weekStartsOn:1})
+      setWeekDifference(weekDifference)
+      if (shiftInserted) setToggleAvailabilities(false)
+      else setToggleAvailabilities(true)
     }
     checkShiftInserted()
   }, [currentWeek])
@@ -29,12 +38,12 @@ export default function ScheduleClient() {
       setIsLoading(true)
       if (weekPlanned) {
         const fetchedShifts = await fetchShifts(currentWeek)
-        const fetchedOpenShifts= await fetchOpenShifts(currentWeek)
-        const shifts= fetchedShifts?fetchedShifts:[]
-        const open=fetchedOpenShifts?fetchedOpenShifts:[]
+        const fetchedOpenShifts = await fetchOpenShifts(currentWeek)
+        const shifts = fetchedShifts ? fetchedShifts : []
+        const open = fetchedOpenShifts ? fetchedOpenShifts : []
 
-        open.forEach(shift=>shift.status='open')
-        const all=shifts.concat(open)
+        open.forEach(shift => shift.status = 'open')
+        const all = shifts.concat(open)
         setShifts(all)
       }
       setIsLoading(false)
@@ -65,21 +74,32 @@ export default function ScheduleClient() {
       </Card> */}
       <Card>
         <CardHeader>
-          <CardTitle>Schedule for Week of {format(currentWeek, 'MMMM d, yyyy')}</CardTitle>
-          <CardDescription>{weekPlanned?`Week currently planned`:`Week currently unplanned`}</CardDescription>
+          <CardTitle>Schedule for Week {format(currentWeek, 'w (y)')}</CardTitle>
+          <CardDescription>{weekPlanned ? `Week currently planned` : `Week currently unplanned`}</CardDescription>
         </CardHeader>
         <CardContent>
-          <WeekNavigator currentWeek={currentWeek} setCurrentWeek={setCurrentWeek} />
+          <div className="flex items-center w-full">
+            <div className="flex-1"></div>
+
+            <div className="flex-none">
+              <WeekNavigator currentWeek={currentWeek} setCurrentWeek={setCurrentWeek} />
+            </div>
+
+            <div className="flex-1 flex justify-end items-center gap-2">
+              <Switch id="availabilty_toggle" disabled={weekDifference<0} onCheckedChange={()=>setToggleAvailabilities(!toggleAvailabilities)} checked={toggleAvailabilities}/>
+              <Label htmlFor="availabilty_toggle">Toggle availabilities</Label>
+            </div>
+          </div>
           {isLoading ? (
             <p>Loading...</p>
           ) : weekPlanned ? (
-            <Scheduler weekStart={currentWeek.toISOString()} shifts={shifts} />
+            <Scheduler weekStart={currentWeek.toISOString()} shifts={shifts} toggleAvailabilities={toggleAvailabilities} />
           ) : (
-            <Scheduler weekStart={currentWeek.toISOString()} />
-          ) }
+            <Scheduler weekStart={currentWeek.toISOString()} toggleAvailabilities={toggleAvailabilities}/>
+          )}
         </CardContent>
       </Card>
     </div>
-    
+
   )
 }

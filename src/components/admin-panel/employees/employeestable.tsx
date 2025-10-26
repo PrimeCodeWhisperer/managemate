@@ -35,7 +35,7 @@ export default function ProfilesPage() {
         // load pending
         try {
           const p = await fetchPendingEmployees()
-          console.log(p)
+          //console.log(p)
           setPending(p)
         } catch (e: any) {
           console.error('Error fetching pending employees', e)

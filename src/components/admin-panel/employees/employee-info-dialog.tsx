@@ -29,7 +29,7 @@ export function EmployeeInfoDialog({ employee }: { employee: Employee }) {
         
                 setShifts(data || [])
               } catch (error: any) {
-                console.log('Error fetching profiles: ' + error.message)
+                //console.log('Error fetching profiles: ' + error.message)
               }
         }
         fetchUpcomingShifts();

@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 interface EditShiftDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (shift: { user_id: string; start_time: string; end_time?: string | null; open_shift: boolean }) => void;
+  onSave: (shift: { user_id: string; start_time: string; end_time?: string | null; open_shift: boolean ;status?:string}) => void;
   shift?: Shift;
   employees?: Employee[];
 }
@@ -27,7 +27,8 @@ const EditShiftDialog: React.FC<EditShiftDialogProps> = ({ isOpen, onClose, onSa
   const ogStartTime=shift?.start_time?shift?.start_time:'';
   const ogOpen=shift?.status==='open'?true:false;
   const ogEndTime = shift?.end_time ?? undefined;
-
+  const ogStatus=shift?.status;
+  //console.log(shift)
   useEffect(() => {
     if (shift) {
       if(shift.user_id){
@@ -58,6 +59,7 @@ const EditShiftDialog: React.FC<EditShiftDialogProps> = ({ isOpen, onClose, onSa
       start_time: startTime,
       end_time: includeEndTime && endTime ? endTime : undefined,
       open_shift: isOpenShift,
+      status:'unplanned'
     };
 
     setShouldRestore(false);
@@ -76,6 +78,7 @@ const EditShiftDialog: React.FC<EditShiftDialogProps> = ({ isOpen, onClose, onSa
               start_time: ogStartTime,
               end_time: ogEndTime,
               open_shift: ogOpen,
+              status:ogStatus
             });
           }
           onClose();
@@ -152,8 +155,18 @@ const EditShiftDialog: React.FC<EditShiftDialogProps> = ({ isOpen, onClose, onSa
           <Button
             variant="outline"
             onClick={() => {
-              setShouldRestore(true);
+                if (shouldRestore && shift) {
+                onSave({
+                  user_id: ogEmployee,
+                  start_time: ogStartTime,
+                  end_time: ogEndTime,
+                  open_shift: ogOpen,
+                  status: ogStatus
+                });
+              }
               onClose();
+              setShouldRestore(true);
+
             }}
           >
             Cancel

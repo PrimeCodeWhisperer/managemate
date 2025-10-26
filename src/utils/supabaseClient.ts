@@ -11,7 +11,7 @@ export async function pubblishShifts(draft_shifts:Shift[],weekStart:Date){
 
   try {
     const openShifts=draft_shifts.filter(shift=>shift.status==='open');
-    const assignedShifts=draft_shifts.filter(shift=>shift.status!=='open');
+    const assignedShifts=draft_shifts.filter(shift=>shift.status!=='open' && shift.status!=='availability');
 
     const open_db=openShifts.map((d) => ({
       date: format(d.date, 'yyyy-MM-dd'), // Convert Date to YYYY-MM-DD string

@@ -9,15 +9,15 @@ export async function GET() {
     .select("*")
     .eq("role", "employee");
 
-  console.log('Raw data from Supabase:', data);
-  console.log('Error from Supabase:', error);
+  //console.log('Raw data from Supabase:', data);
+  //console.log('Error from Supabase:', error);
 
   if (error) {
     console.error('Supabase error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
   if (!data || data.length === 0) {
-    console.log('No employees found');
+    //console.log('No employees found');
     return NextResponse.json([]);
   }
 
@@ -31,7 +31,7 @@ export async function GET() {
       last_name: employee.last_name || '',
     }));
 
-    console.log('Mapped employees:', employees);
+    //console.log('Mapped employees:', employees);
     return NextResponse.json(employees);
   } catch (mappingError) {
     console.error('Error mapping employees:', mappingError);
