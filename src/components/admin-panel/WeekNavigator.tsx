@@ -3,8 +3,6 @@ import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { format, addWeeks, startOfWeek, endOfWeek } from 'date-fns'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import Calendar from '../dashboard/cal'
-import { MonthPicker } from '@/components/ui/monthpicker'
 
 interface WeekNavigatorProps {
   currentWeek: Date
