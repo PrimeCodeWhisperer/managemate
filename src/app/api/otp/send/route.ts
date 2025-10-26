@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const baseUrl = process.env.PUBLIC_APP_URL || "http://localhost:3000";
   const loginUrl = `${baseUrl}/login?email=${encodeURIComponent(user.email ?? email)}`;
   const fromAddress = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
   const supportEmail = process.env.SUPPORT_EMAIL || "support@managemate.online";
