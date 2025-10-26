@@ -36,7 +36,7 @@ export default function CompleteProfilePage() {
       password:password
     })
     await supabase.auth.signOut()
-    return redirect("/get-app");
+    return redirect("/success-registered");
   };
   
 
