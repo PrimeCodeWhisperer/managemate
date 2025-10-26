@@ -84,7 +84,7 @@ export function AddEmployeeDialog({ onPendingRefresh }: { onPendingRefresh?: (pe
         <Label>Full Name</Label>
         <Input
           type="text"
-          placeholder="Username"
+          placeholder="Full Name"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
