@@ -1,11 +1,11 @@
-import { createServerClient } from "@/utils/supabase/server";
+import { createClient } from "@/utils/supabase/server";
 
 /**
  * Exports user data for GDPR data portability requests
  * This should be called from an admin interface or API endpoint
  */
 export async function exportUserData(userId: string) {
-  const supabase = createServerClient();
+  const supabase = createClient();
   
   try {
     // User profile data
@@ -92,7 +92,7 @@ export async function deleteUserData(userId: string, options: {
   keepHistoricalData?: boolean;
   anonymizeInsteadOfDelete?: boolean;
 } = {}) {
-  const supabase = createServerClient();
+  const supabase = createClient();
   
   try {
     const deletionLog = {
@@ -182,7 +182,7 @@ export async function deleteUserData(userId: string, options: {
  * Gets data retention info for a user
  */
 export async function getUserDataRetention(userId: string) {
-  const supabase = createServerClient();
+  const supabase = createClient();
   
   try {
     // Get user's last activity
