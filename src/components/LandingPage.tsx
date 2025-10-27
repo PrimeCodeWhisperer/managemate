@@ -15,7 +15,7 @@ export default function LandingPage() {
             className="flex justify-start items-center hover:opacity-85 transition-opacity duration-300"
           >
             <PanelsTopLeft className="w-6 h-6 mr-3" />
-            <span className="font-bold">MangeMate</span>
+            <span className="font-bold">ManageMate</span>
             <span className="sr-only">ManageMate</span>
           </Link>
           <nav className="ml-auto flex items-center gap-4 text-sm font-medium">
@@ -81,19 +81,6 @@ export default function LandingPage() {
               </div>
             </div>
           </section>
-          {/* <section
-            id="screenshot"
-            className="mx-auto max-w-[980px] py-12 md:py-24"
-          >
-            <h2 className="text-center text-3xl font-bold mb-8">
-              See ManageMate in action
-            </h2>
-            <div className="w-full h-64 bg-muted flex items-center justify-center rounded-md">
-              <span className="text-muted-foreground">
-                Placeholder for a screenshot or hero image of the application
-              </span>
-            </div>
-          </section> */}
           <section
             id="pricing"
             className="mx-auto max-w-[980px] py-12 md:py-24"
@@ -118,30 +105,6 @@ export default function LandingPage() {
               </div>
             </div>
           </section>
-          {/* <section
-            id="testimonials"
-            className="mx-auto max-w-[980px] py-12 md:py-24"
-          >
-            <h2 className="text-center text-3xl font-bold mb-8">
-              What people are saying
-            </h2>
-            <div className="grid gap-8 md:grid-cols-2">
-              <div className="border rounded-lg p-6 space-y-4">
-                <p>
-                  &quot;Placeholder testimonial about how ManageMate simplified our
-                  workflow and saved hours each week.&quot;
-                </p>
-                <p className="font-semibold">Jane Doe, Company Inc.</p>
-              </div>
-              <div className="border rounded-lg p-6 space-y-4">
-                <p>
-                  &quot;Another placeholder testimonial highlighting the
-                  effectiveness of the scheduling features.&quot;
-                </p>
-                <p className="font-semibold">John Smith, Freelancer</p>
-              </div>
-            </div>
-          </section> */}
           <section
             id="contact"
             className="mx-auto max-w-[980px] py-12 md:py-24 flex flex-col items-center"
@@ -152,35 +115,25 @@ export default function LandingPage() {
             </p>
             <Button  disabled>Unavailable At The Moment</Button>
           </section>
-          {/* <section
-            id="cta"
-            className="mx-auto max-w-[980px] py-12 md:py-24 text-center"
-          >
-            <h2 className="text-3xl font-bold mb-4">
-              Ready to take control of your schedule?
-            </h2>
-            <p className="mb-6 text-muted-foreground">
-              Sign up today and start planning with ManageMate.
-            </p>
-            <Button variant="default" asChild>
-              <Link href="/register">
-                Get Started
-                <ArrowRightIcon className="ml-2" />
-              </Link>
-            </Button>
-          </section> */}
         </div>
       </main>
       <footer className="py-6 md:py-0 border-t border-border/40">
         <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} ManageMate. All rights
-            reserved.
+            &copy; {new Date().getFullYear()} ManageMate. All rights reserved.
           </p>
           <div className="flex items-center gap-4 text-sm font-medium">
+            <Link href="/privacy" className="hover:underline">
+              Privacy Policy
+            </Link>
+            <Link href="/data-request" className="hover:underline">
+              Your Data Rights
+            </Link>
             <Link
-              href="https://github.com/"
+              href="https://github.com/PrimeCodeWhisperer/managemate"
               className="flex items-center gap-1 hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <GitHubLogoIcon /> GitHub
             </Link>
