@@ -94,7 +94,7 @@ export function CookieConsentBanner() {
             <div className="flex-1">
               <h3 className="text-lg font-semibold mb-2">Cookie Preferences</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                We use essential cookies to ensure our website works properly for you. We'd also like to set
+                We use essential cookies to ensure our website works properly for you. {"We'd"} also like to set
                 optional analytics cookies to help us improve our service. You can choose which cookies to accept.
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-500">
@@ -132,7 +132,7 @@ export function CookieConsentBanner() {
                 <DialogHeader>
                   <DialogTitle>Cookie Preferences</DialogTitle>
                   <DialogDescription>
-                    Choose which types of cookies you'd like to allow.
+                    Choose which types of cookies {"you'd"} like to allow.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">

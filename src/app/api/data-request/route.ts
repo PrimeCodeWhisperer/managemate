@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 interface DataRequestBody {
   email: string;
@@ -18,6 +18,8 @@ const requestTypeLabels: Record<string, string> = {
   objection: "Data Processing Objection",
   "withdraw-consent": "Consent Withdrawal Request",
 };
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,15 +41,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Create email transporter (using existing Gmail setup)
-    const transporter = nodemailer.createTransporter({
-      service: "gmail",
-      auth: {
-        user: process.env.GMAIL_USERNAME,
-        pass: process.env.GMAIL_PASSWORD,
-      },
-    });
 
     const requestLabel = requestTypeLabels[body.requestType] || "Data Request";
     const timestamp = new Date().toISOString();
@@ -98,28 +91,28 @@ export async function POST(request: NextRequest) {
         <li>You will receive an email with the results or any additional steps needed</li>
       </ol>
       
-      <p>If you have any questions, please contact us at <a href="mailto:privacy@managemate.app">privacy@managemate.app</a> and reference your Request ID: ${requestId}</p>
+      <p>If you have any questions, please contact us at <a href="mailto:privacy@managemate.online">privacy@managemate.online</a> and reference your Request ID: ${requestId}</p>
       
       <hr>
       <p>Best regards,<br>
       ManageMate Privacy Team</p>
       
-      <p><small>This is an automated response. Please do not reply to this email. For questions, use privacy@managemate.app</small></p>
+      <p><small>This is an automated response. Please do not reply to this email. For questions, use privacy@managemate.online</small></p>
     `;
 
     // Send email to admin/privacy team
-    await transporter.sendMail({
-      from: process.env.GMAIL_USERNAME,
-      to: process.env.PRIVACY_EMAIL || process.env.GMAIL_USERNAME,
+    await resend.emails.send({
+      from: process.env.FROM_EMAIL || 'ManageMate <noreply@managemate.onine>',
+      to: [process.env.PRIVACY_EMAIL || 'privacy@managemate.online'],
       subject: `GDPR Data Request - ${requestLabel} - ${requestId}`,
       html: adminEmailContent,
       replyTo: body.email,
     });
 
     // Send confirmation email to user
-    await transporter.sendMail({
-      from: process.env.GMAIL_USERNAME,
-      to: body.email,
+    await resend.emails.send({
+      from: process.env.FROM_EMAIL || 'ManageMate <noreply@managemate.onine>',
+      to: [body.email],
       subject: `Data Request Confirmation - ${requestId}`,
       html: userEmailContent,
     });

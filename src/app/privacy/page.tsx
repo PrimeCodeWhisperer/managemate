@@ -28,12 +28,12 @@ export default function PrivacyPage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">1. Introduction</h2>
               <p className="mb-4">
-                ManageMate ("we," "our," or "us") operates the ManageMate workforce scheduling platform, 
-                including our website and mobile application (collectively, the "Service"). This Privacy Policy 
+                ManageMate {`("we," "our," or "us")`} operates the ManageMate workforce scheduling platform, 
+                including our website and mobile application (collectively, the {`"Service"`}). This Privacy Policy 
                 explains how we collect, use, disclose, and protect your personal information when you use our Service.
               </p>
               <p>
-                As a Netherlands-based service, we comply with the European Union's General Data Protection 
+                As a Netherlands-based service, we comply with the European {`Union's`} General Data Protection 
                 Regulation (GDPR) and Dutch data protection laws.
               </p>
             </section>
@@ -222,7 +222,7 @@ export default function PrivacyPage() {
             <Separator className="my-6" />
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4">12. Children's Privacy</h2>
+              <h2 className="text-2xl font-semibold mb-4">12. {"Children's"} Privacy</h2>
               <p>
                 ManageMate is designed for workplace use and not intended for individuals under 16. 
                 We do not knowingly collect data from children under 16 without parental consent.
@@ -235,7 +235,7 @@ export default function PrivacyPage() {
               <h2 className="text-2xl font-semibold mb-4">13. Changes to This Policy</h2>
               <p className="mb-4">
                 We may update this Privacy Policy to reflect service changes or legal requirements. 
-                We'll notify users of material changes via:
+                {"We'll"} notify users of material changes via:
               </p>
               <ul className="list-disc ml-6 space-y-2">
                 <li>Email notification to registered users</li>
@@ -253,13 +253,13 @@ export default function PrivacyPage() {
               <h2 className="text-2xl font-semibold mb-4">14. Contact Information</h2>
               <p className="mb-4">For privacy-related questions or to exercise your rights:</p>
               <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-4">
-                <p><strong>Email:</strong> <a href="mailto:privacy@managemate.app" className="text-blue-600 hover:text-blue-800 dark:text-blue-400">privacy@managemate.app</a></p>
+                <p><strong>Email:</strong> <a href="mailto:privacy@managemate.app" className="text-blue-600 hover:text-blue-800 dark:text-blue-400">privacy@managemate.online</a></p>
                 <p><strong>Address:</strong> Netherlands</p>
               </div>
               <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
                 <p className="font-semibold mb-2">Data Protection Authority:</p>
                 <p className="mb-2">
-                  If you're unsatisfied with our response, you may file a complaint with the Dutch Data Protection Authority (Autoriteit Persoonsgegevens):
+                  If {"you're"} unsatisfied with our response, you may file a complaint with the Dutch Data Protection Authority (Autoriteit Persoonsgegevens):
                 </p>
                 <p>
                   Website: <a href="https://autoriteitpersoonsgegevens.nl" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 dark:text-blue-400">autoriteitpersoonsgegevens.nl</a><br />
