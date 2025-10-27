@@ -80,7 +80,7 @@ export default function ResetPasswordForm() {
 
     // Sign out after successful password reset
     await supabase.auth.signOut()
-    router.push('/login?message=Password reset successful. Please login with your new password.')
+    router.push('/success-registered')
   }
 
   // Show message from searchParams if present
