@@ -5,6 +5,7 @@ import "./globals.css";
 
 import { ThemeProvider } from "@/providers/theme-provider";
 import { SettingsProvider } from "@/contexts/SettingsContext";
+import { CookieConsentBanner } from "@/components/cookie-consent-banner";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
       ? `https://${process.env.VERCEL_URL}`
       : `http://localhost:${process.env.PORT || 3000}`
   ),
-  title: "Managemate",
+  title: "ManageMate",
   description:
     "A stunning and functional web scheduler complete with desktop and mobile responsiveness.",
   alternates: {
@@ -22,14 +23,14 @@ export const metadata: Metadata = {
   },
   openGraph: {
     url: "/",
-    title: "Managemate",
+    title: "ManageMate",
     description:
     "A stunning and functional web scheduler complete with desktop and mobile responsiveness.",
     type: "website"
   },
   twitter: {
     card: "summary_large_image",
-    title: "shadcn/ui sidebar",
+    title: "ManageMate",
     description:
     "A stunning and functional web scheduler complete with desktop and mobile responsiveness."
   }
@@ -44,7 +45,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={GeistSans.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <SettingsProvider>{children}</SettingsProvider>
+          <SettingsProvider>
+            {children}
+            <CookieConsentBanner />
+          </SettingsProvider>
         </ThemeProvider>
       </body>
     </html>
