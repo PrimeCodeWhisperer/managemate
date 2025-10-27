@@ -61,7 +61,7 @@ Add these to your `.env.local`:
 
 ```bash
 # Privacy-related email settings
-PRIVACY_EMAIL=privacy@managemate.app
+PRIVACY_EMAIL=privacy@managemate.online
 GMAIL_USERNAME=your-gmail@gmail.com
 GMAIL_PASSWORD=your-app-password
 ```
@@ -143,7 +143,7 @@ GMAIL_PASSWORD=your-app-password
 3. **Exercise Data Rights**: Visit `/data-request` to submit GDPR requests
 
 ### For Administrators
-1. **Handle Data Requests**: Monitor `privacy@managemate.app` for incoming requests
+1. **Handle Data Requests**: Monitor `privacy@managemate.online` for incoming requests
 2. **Process Requests**: Use admin tools or data export utilities
 3. **Maintain Compliance**: Regular review of data retention and processing
 
@@ -182,7 +182,7 @@ GMAIL_PASSWORD=your-app-password
 
 ## Contact Information
 
-**Privacy Officer**: privacy@managemate.app  
+**Privacy Officer**: privacy@managemate.online  
 **Data Controller**: ManageMate, Netherlands  
 **Technical Support**: Check repository issues or contact via GitHub
 

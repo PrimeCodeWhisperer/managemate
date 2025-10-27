@@ -122,8 +122,8 @@ export default function DataRequestPage() {
               <AlertDescription>
                 This form allows you to exercise your rights under the General Data Protection Regulation (GDPR).
                 All requests are processed within 30 days. For urgent matters, contact us directly at{" "}
-                <a href="mailto:privacy@managemate.app" className="text-blue-600 hover:text-blue-800 dark:text-blue-400">
-                  privacy@managemate.app
+                <a href="mailto:privacy@managemate.online" className="text-blue-600 hover:text-blue-800 dark:text-blue-400">
+                  privacy@managemate.online
                 </a>
               </AlertDescription>
             </Alert>

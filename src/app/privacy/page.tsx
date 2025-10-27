@@ -46,7 +46,7 @@ export default function PrivacyPage() {
                 <p><strong>Data Controller:</strong></p>
                 <p>ManageMate<br />
                 Netherlands<br />
-                Email: privacy@managemate.app</p>
+                Email: privacy@managemate.online</p>
               </div>
             </section>
 
@@ -167,8 +167,8 @@ export default function PrivacyPage() {
               </ul>
               <p>
                 To exercise these rights, contact us at{" "}
-                <a href="mailto:privacy@managemate.app" className="text-blue-600 hover:text-blue-800 dark:text-blue-400">
-                  privacy@managemate.app
+                <a href="mailto:privacy@managemate.online" className="text-blue-600 hover:text-blue-800 dark:text-blue-400">
+                  privacy@managemate.online
                 </a>
                 .
               </p>
@@ -253,7 +253,7 @@ export default function PrivacyPage() {
               <h2 className="text-2xl font-semibold mb-4">14. Contact Information</h2>
               <p className="mb-4">For privacy-related questions or to exercise your rights:</p>
               <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-4">
-                <p><strong>Email:</strong> <a href="mailto:privacy@managemate.app" className="text-blue-600 hover:text-blue-800 dark:text-blue-400">privacy@managemate.online</a></p>
+                <p><strong>Email:</strong> <a href="mailto:privacy@managemate.online" className="text-blue-600 hover:text-blue-800 dark:text-blue-400">privacy@managemate.online</a></p>
                 <p><strong>Address:</strong> Netherlands</p>
               </div>
               <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
