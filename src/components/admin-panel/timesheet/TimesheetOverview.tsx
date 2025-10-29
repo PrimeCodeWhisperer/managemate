@@ -12,8 +12,9 @@ import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useSupabaseData } from "@/contexts/SupabaseContext"
 import { createClient } from "@/utils/supabase/client"
-import { calculateShiftMinutes, formatMinutesToHours } from "./timesheet-utils"
+import { calculateShiftMinutes, exportTimesheetToExcel, formatMinutesToHours } from "./timesheet-utils"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { fetchMonthTimesheet } from "@/utils/supabaseClient"
 
 type TimesheetSummary = {
   employeeId: string
@@ -111,6 +112,13 @@ export default function TimesheetOverview() {
     const employee = employees?.find((entry) => entry.id === employeeId)
     return employee?.username ?? "Unknown"
   }
+  const handleExportAsExcel= async ()=>{
+    const timesheet = await fetchMonthTimesheet('2025-10');
+    if (timesheet) {
+      exportTimesheetToExcel(timesheet);
+      // Downloads: timesheet-2025-10.xlsx
+    }
+  }
 
   return (
     <Card>
@@ -134,7 +142,7 @@ export default function TimesheetOverview() {
               <Button>Export</Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem onClick={()=>{}}>Export as Excel</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportAsExcel}>Export as Excel</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 

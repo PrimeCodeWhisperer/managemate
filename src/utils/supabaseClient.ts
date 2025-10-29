@@ -1,6 +1,7 @@
 import { createClient } from './supabase/client';
 import { endOfWeek, startOfWeek, format, startOfDay, endOfDay } from 'date-fns';
 import { Shift, UpcomingShift } from '@/lib/definitions';
+import { DailyTimesheet, MonthTimesheetSummary } from '@/types/timesheet';
 
 export async function updateSelectedShifts(updated_shifts:Shift[]){
   
@@ -231,4 +232,93 @@ export async function fetchEmployeeAvailabilityByWeek(currentWeek:Date){
         return data.length;
       }
 
+}
+/**
+ * Fetches timesheet data for all employees for a given month
+ * @param month - Month in 'yyyy-MM' format (e.g., '2025-10')
+ * @returns MonthTimesheetSummary with hours per day per employee
+ */
+export async function fetchMonthTimesheet(month: string): Promise<MonthTimesheetSummary | undefined> {
+  const supabase = createClient();
+
+  try {
+    // Parse the month and calculate date range
+    const startDate = new Date(`${month}-01`);
+    const nextMonth = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 1);
+
+    const startDateString = format(startDate, 'yyyy-MM-dd');
+    const endDateString = format(nextMonth, 'yyyy-MM-dd');
+
+    // Fetch all shifts for the month
+    const { data, error } = await supabase
+      .from('past_shifts')
+      .select('id, user_id, date, start_time, end_time')
+      .gte('date', startDateString)
+      .lt('date', endDateString)
+      .order('date', { ascending: true })
+      .order('user_id', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching month timesheet:', error);
+      throw error;
+    }
+
+    // Group shifts by date and employee
+    const timesheetMap = new Map<string, DailyTimesheet>();
+
+    data?.forEach((shift) => {
+      if (!shift.user_id) return;
+
+      const key = `${shift.date}-${shift.user_id}`;
+      
+      // Calculate shift duration in minutes
+      const minutes = calculateShiftMinutes(shift);
+
+      if (!timesheetMap.has(key)) {
+        timesheetMap.set(key, {
+          date: shift.date,
+          employeeId: shift.user_id,
+          employeeName: '', // Will be populated by caller if needed
+          totalMinutes: 0,
+          shifts: [],
+        });
+      }
+
+      const dailyTimesheet = timesheetMap.get(key)!;
+      dailyTimesheet.totalMinutes += minutes;
+      dailyTimesheet.shifts.push({
+        id: shift.id,
+        start_time: shift.start_time,
+        end_time: shift.end_time,
+        minutes,
+      });
+    });
+
+    return {
+      month,
+      dailyTimesheets: Array.from(timesheetMap.values()),
+    };
+  } catch (error) {
+    console.error('Unexpected error fetching month timesheet:', error);
+    return undefined;
+  }
+}
+
+// Helper function to calculate shift minutes (if not already in codebase)
+function calculateShiftMinutes(shift: {
+  date: string;
+  start_time?: string | null;
+  end_time?: string | null;
+}): number {
+  if (!shift.start_time || !shift.end_time) return 0;
+
+  try {
+    const startDateTime = new Date(`${shift.date}T${shift.start_time}`);
+    const endDateTime = new Date(`${shift.date}T${shift.end_time}`);
+    
+    const diffMs = endDateTime.getTime() - startDateTime.getTime();
+    return Math.round(diffMs / (1000 * 60)); // Convert to minutes
+  } catch {
+    return 0;
+  }
 }
