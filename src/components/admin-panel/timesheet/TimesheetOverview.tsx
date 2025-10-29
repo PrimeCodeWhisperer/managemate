@@ -13,6 +13,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useSupabaseData } from "@/contexts/SupabaseContext"
 import { createClient } from "@/utils/supabase/client"
 import { calculateShiftMinutes, formatMinutesToHours } from "./timesheet-utils"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 type TimesheetSummary = {
   employeeId: string
@@ -115,7 +116,7 @@ export default function TimesheetOverview() {
     <Card>
       <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <CardTitle>Monthly Overview</CardTitle>
-        <div className="w-full sm:w-56">
+        <div className="flex w-full sm:w-56 flex-row gap-3 items-center">
           <Select value={selectedMonth} onValueChange={setSelectedMonth}>
             <SelectTrigger>
               <SelectValue placeholder="Select month" />
@@ -128,6 +129,15 @@ export default function TimesheetOverview() {
               ))}
             </SelectContent>
           </Select>
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <Button>Export</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={()=>{}}>Export as Excel</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
